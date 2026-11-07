@@ -102,7 +102,7 @@ A weekly workflow regenerates the types from the published spec and fails when t
     git tag v0.1.0 && git push origin v0.1.0
     ```
 
-    The **Publish** workflow then tests and builds on Node 22, 24 and 26 and publishes to npm with provenance. It refuses a tag that doesn't match `package.json`, and it needs an `NPM_TOKEN` secret.
+    The **Publish** workflow then tests and builds on Node 22, 24 and 26 and publishes to npm with provenance. It refuses a tag that doesn't match `package.json`. It publishes through npm trusted publishing, so no npm token is stored in the repository.
 
 CI on pushes and pull requests checks formatting, types and tests only. It doesn't build or publish.
 
