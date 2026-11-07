@@ -7,7 +7,7 @@
 
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import yaml from 'js-yaml';
+import { load } from 'js-yaml';
 
 const SPEC =
     process.env.SPEC ?? 'https://developers.storehugs.com/openapi.yaml';
@@ -48,10 +48,10 @@ async function loadSpec(source) {
             throw new Error(`Fetching ${source} answered ${response.status}.`);
         }
 
-        return yaml.load(await response.text());
+        return load(await response.text());
     }
 
-    return yaml.load(await readFile(source, 'utf8'));
+    return load(await readFile(source, 'utf8'));
 }
 
 const nameOf = (ref) => {

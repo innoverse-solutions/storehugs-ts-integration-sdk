@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
 
 permissions:
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: ['22', '24']
+        node: ['22', '24', '26']
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,3 +25,5 @@ jobs:
       - run: npm run types:check
       - run: npm test
       - run: npm run build
+      - name: The built package loads on this Node version
+        run: node --input-type=module -e "const sdk = await import('./dist/index.js'); if (typeof sdk.AdminClient !== 'function' || typeof sdk.StorefrontClient !== 'function') process.exit(1);"

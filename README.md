@@ -1,6 +1,6 @@
 # @storehugs/integration
 
-A TypeScript client for the Store Hugs Integration API. It has no dependencies and runs on Node 20+, browsers, Deno and Bun.
+A TypeScript client for the Store Hugs Integration API. It has no dependencies and runs on Node 22+, browsers, Deno and Bun.
 
 - **Storefront API:** the catalog, carts and checkout links, and signed-in shoppers on the shop's host. Use a publishable key in browsers on the sites it lists, or a secret key on your server.
 - **Admin API:** the merchant's own systems and connected apps. Use an Admin key (`sa_live_…`) on your server only.
