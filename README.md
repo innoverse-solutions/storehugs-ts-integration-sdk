@@ -1,5 +1,9 @@
 # @storehugs/integration
 
+[![npm](https://img.shields.io/npm/v/@storehugs/integration)](https://www.npmjs.com/package/@storehugs/integration)
+[![CI](https://github.com/innoverse-solutions/storehugs-ts-integration-sdk/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/innoverse-solutions/storehugs-ts-integration-sdk/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
 A TypeScript client for the Store Hugs Integration API. It has no dependencies and runs on Node 22+, browsers, Deno and Bun.
 
 - **Storefront API:** the catalog, carts and checkout links, and signed-in shoppers on the shop's host. Use a publishable key in browsers on the sites it lists, or a secret key on your server.
@@ -101,6 +105,10 @@ A weekly workflow regenerates the types from the published spec and fails when t
     The **Publish** workflow then tests and builds on Node 22, 24 and 26 and publishes to npm with provenance. It refuses a tag that doesn't match `package.json`, and it needs an `NPM_TOKEN` secret.
 
 CI on pushes and pull requests checks formatting, types and tests only. It doesn't build or publish.
+
+## Contributing and security
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Report vulnerabilities privately, as [SECURITY.md](SECURITY.md) describes.
 
 ## License
 
