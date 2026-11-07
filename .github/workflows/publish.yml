@@ -55,6 +55,11 @@ jobs:
             echo "Tag $GITHUB_REF_NAME does not match package.json ($version)." >&2
             exit 1
           fi
-      # prepack builds dist/ before the package is packed; provenance is
-      # added automatically with trusted publishing.
-      - run: npm publish --access public
+      # prepack builds dist/ before the package is packed. npm uses trusted
+      # publishing when the package's Trusted Publisher names this workflow,
+      # and otherwise the NPM_TOKEN secret: only needed for the very first
+      # release, before the package exists on npm. Delete the secret once
+      # trusted publishing is set up.
+      - run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
