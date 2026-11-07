@@ -1,0 +1,51 @@
+{
+    "name": "@storehugs/integration",
+    "version": "0.1.0",
+    "description": "TypeScript client for the Store Hugs Integration API: the Storefront API and the Admin API.",
+    "license": "MIT",
+    "type": "module",
+    "sideEffects": false,
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        }
+    },
+    "files": [
+        "dist"
+    ],
+    "engines": {
+        "node": ">=20"
+    },
+    "keywords": [
+        "storehugs",
+        "ecommerce",
+        "headless",
+        "api-client",
+        "sdk"
+    ],
+    "homepage": "https://developers.storehugs.com",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/innoverse-solutions/storehugs-ts-integration-sdk.git"
+    },
+    "bugs": {
+        "url": "https://github.com/innoverse-solutions/storehugs-ts-integration-sdk/issues"
+    },
+    "scripts": {
+        "build": "tsc -p tsconfig.build.json",
+        "types:check": "tsc -p tsconfig.json --noEmit",
+        "test": "node --test 'test/**/*.test.ts'",
+        "format": "prettier --write src test scripts",
+        "format:check": "prettier --check src test scripts",
+        "generate": "node scripts/generate-types.mjs && prettier --write src/schemas.ts",
+        "prepublishOnly": "npm run types:check && npm test",
+        "prepack": "npm run build"
+    },
+    "devDependencies": {
+        "@types/node": "22.20.1",
+        "js-yaml": "4.1.0",
+        "prettier": "3.9.6",
+        "typescript": "5.9.3"
+    }
+}

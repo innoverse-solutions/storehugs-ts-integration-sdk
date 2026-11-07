@@ -1,0 +1,231 @@
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import { AdminClient } from '../src/admin.ts';
+import { IntegrationApiError } from '../src/errors.ts';
+import { fakeFetch, json } from './support.ts';
+
+test('calls the panel host with the Admin key and unwraps data', async () => {
+    const { fetch, requests } = fakeFetch(
+        json({ data: { id: 7, name: 'Acme' } }),
+    );
+    const admin = new AdminClient({ apiKey: 'sa_live_x', fetch });
+
+    const shop = await admin.shop();
+
+    assert.equal(shop.name, 'Acme');
+    assert.equal(
+        requests[0]?.url,
+        'https://my.storehugs.com/api/admin/v1/shop',
+    );
+    assert.equal(requests[0]?.headers.Authorization, 'Bearer sa_live_x');
+    assert.equal(requests[0]?.headers['Idempotency-Key'], undefined);
+});
+
+test('every write carries an Idempotency-Key, kept across a retry after 429', async () => {
+    const { fetch, requests } = fakeFetch(
+        json({ message: 'Too many', code: 'too_many' }, 429, {
+            'Retry-After': '0',
+        }),
+        json({ data: { id: 1 } }, 201),
+    );
+    const admin = new AdminClient({ apiKey: 'sa_live_x', fetch });
+
+    await admin.coupons.create({
+        code: 'SUMMER',
+        type: 'percentage',
+        value: 10,
+    });
+
+    assert.equal(requests.length, 2);
+    assert.match(
+        requests[0]?.headers['Idempotency-Key'] ?? '',
+        /^[0-9a-f-]{36}$/,
+    );
+    assert.equal(
+        requests[1]?.headers['Idempotency-Key'],
+        requests[0]?.headers['Idempotency-Key'],
+    );
+    assert.deepEqual(requests[0]?.body, {
+        code: 'SUMMER',
+        type: 'percentage',
+        value: 10,
+    });
+});
+
+test('an update names the version it changes', async () => {
+    const { fetch, requests } = fakeFetch(json({ data: { id: 3 } }));
+    const admin = new AdminClient({ apiKey: 'sa_live_x', fetch });
+
+    await admin.products.update(
+        3,
+        { title: 'Mug' },
+        { unmodifiedSince: '2026-11-07T10:00:00+00:00' },
+    );
+
+    assert.equal(requests[0]?.method, 'PATCH');
+    assert.equal(
+        requests[0]?.headers['If-Unmodified-Since'],
+        'Sat, 07 Nov 2026 10:00:00 GMT',
+    );
+});
+
+test('all() follows cursors until the last page', async () => {
+    const page = (ids: number[], next: string | null) =>
+        json({
+            data: ids.map((id) => ({ id })),
+            links: {},
+            meta: { next_cursor: next },
+        });
+    const { fetch, requests } = fakeFetch(page([1, 2], 'abc'), page([3], null));
+    const admin = new AdminClient({ apiKey: 'sa_live_x', fetch });
+
+    const ids: number[] = [];
+
+    for await (const order of admin.orders.all({
+        status: 'confirmed',
+        limit: 2,
+    })) {
+        ids.push(order.id);
+    }
+
+    assert.deepEqual(ids, [1, 2, 3]);
+    assert.equal(
+        requests[1]?.url,
+        'https://my.storehugs.com/api/admin/v1/orders?status=confirmed&limit=2&cursor=abc',
+    );
+});
+
+test('a refusal becomes an IntegrationApiError with its code and field errors', async () => {
+    const { fetch } = fakeFetch(
+        json(
+            {
+                message: 'The value is invalid.',
+                errors: { value: ['Too high.'] },
+            },
+            422,
+        ),
+    );
+    const admin = new AdminClient({
+        apiKey: 'sa_live_x',
+        fetch,
+        maxRetries: 0,
+    });
+
+    await assert.rejects(
+        admin.coupons.update(1, { value: 150 }),
+        (error: unknown) => {
+            assert.ok(error instanceof IntegrationApiError);
+            assert.equal(error.status, 422);
+            assert.ok(error.isValidationError);
+            assert.deepEqual(error.errors.value, ['Too high.']);
+
+            return true;
+        },
+    );
+});
+
+test('a quotation action is posted to its own path, with the order made', async () => {
+    const { fetch, requests } = fakeFetch(
+        json({
+            data: { id: 5, status: 'agreed' },
+            order: { id: 9, order_number: 'A-9' },
+        }),
+    );
+    const admin = new AdminClient({ apiKey: 'sa_live_x', fetch });
+
+    const result = await admin.quotations.perform(
+        5,
+        'agree_and_order',
+        'By phone',
+    );
+
+    assert.equal(
+        requests[0]?.url,
+        'https://my.storehugs.com/api/admin/v1/quotations/5/agree_and_order',
+    );
+    assert.deepEqual(requests[0]?.body, { note: 'By phone' });
+    assert.equal(result.order?.id, 9);
+});
+
+test('an app is sent to approve, then trades its code for an Admin key', async () => {
+    const url = new URL(
+        AdminClient.authorizeAppUrl({
+            clientId: 'app-1',
+            redirectUri: 'https://app.test/cb',
+            scopes: ['orders:read', 'products:write'],
+            state: 's',
+            codeChallenge: 'c',
+        }),
+    );
+
+    assert.equal(
+        url.origin + url.pathname,
+        'https://my.storehugs.com/integrations/authorize',
+    );
+    assert.equal(url.searchParams.get('scope'), 'orders:read products:write');
+    assert.equal(url.searchParams.get('code_challenge_method'), 'S256');
+
+    const { fetch, requests } = fakeFetch(
+        json({
+            api_key: 'sa_live_app',
+            scopes: ['orders:read'],
+            shop: { id: 1, name: 'Acme' },
+        }),
+    );
+    const grant = await AdminClient.exchangeAppCode({
+        code: 'code',
+        clientId: 'app-1',
+        redirectUri: 'https://app.test/cb',
+        codeVerifier: 'v',
+        fetch,
+    });
+
+    assert.equal(grant.api_key, 'sa_live_app');
+    assert.equal(requests[0]?.headers['Idempotency-Key'], undefined);
+    assert.equal(
+        (requests[0]?.body as Record<string, string>).grant_type,
+        'authorization_code',
+    );
+});
+
+test('a retry that finds the first write still running waits for it under the same key', async () => {
+    const { fetch, requests } = fakeFetch(
+        json({ message: 'Unavailable' }, 503, { 'Retry-After': '0' }),
+        json(
+            { message: 'Still running', code: 'idempotency_in_progress' },
+            409,
+            { 'Retry-After': '0' },
+        ),
+        json({ data: { id: 8 } }, 201, { 'Idempotent-Replayed': 'true' }),
+    );
+    const admin = new AdminClient({ apiKey: 'sa_live_x', fetch });
+
+    const product = await admin.coupons.create({
+        code: 'WAIT',
+        type: 'fixed',
+        value: 5,
+    });
+
+    assert.equal(product.id, 8);
+    assert.equal(requests.length, 3);
+    assert.equal(
+        new Set(requests.map((request) => request.headers['Idempotency-Key']))
+            .size,
+        1,
+    );
+});
+
+test('another 409 is thrown at once', async () => {
+    const { fetch, requests } = fakeFetch(
+        json({ message: 'Changed since read', code: 'edit_conflict' }, 409),
+    );
+    const admin = new AdminClient({ apiKey: 'sa_live_x', fetch });
+
+    await assert.rejects(
+        admin.coupons.update(1, { value: 5 }),
+        (error: unknown) =>
+            error instanceof IntegrationApiError &&
+            error.code === 'edit_conflict',
+    );
+    assert.equal(requests.length, 1);
+});
