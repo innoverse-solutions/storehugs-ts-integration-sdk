@@ -1,18 +1,41 @@
 name: Publish
 
-# Publishes to npm when a GitHub release is published, with provenance.
-# Needs the NPM_TOKEN secret (an automation token for the @storehugs scope).
+# Builds and publishes to npm, with provenance, when a version tag is pushed:
+#   git tag v0.1.0 && git push origin v0.1.0
+# The tag must match `version` in package.json. Needs the NPM_TOKEN secret (an
+# automation token for the @storehugs scope).
 on:
-  release:
-    types: [published]
+  push:
+    tags: ['v*.*.*']
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: ['22', '24', '26']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run types:check
+      - run: npm test
+      - run: npm run build
+      - name: The built package loads on this Node version
+        run: node --input-type=module -e "const sdk = await import('./dist/index.js'); if (typeof sdk.AdminClient !== 'function' || typeof sdk.StorefrontClient !== 'function') process.exit(1);"
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -21,6 +44,14 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           cache: npm
       - run: npm ci
+      - name: The tag matches the package version
+        run: |
+          version="v$(node -p "require('./package.json').version")"
+          if [ "$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package.json ($version)." >&2
+            exit 1
+          fi
+      # prepack builds dist/ before the package is packed.
       - run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

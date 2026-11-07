@@ -12,16 +12,25 @@ The full reference is at https://developers.storehugs.com (`/openapi.yaml`). Rep
 ```ts
 import { StorefrontClient } from '@storehugs/integration';
 
-const storefront = new StorefrontClient({ host: 'acme.storehugs.com', key: 'pk_live_…' });
+const storefront = new StorefrontClient({
+    host: 'acme.storehugs.com',
+    key: 'pk_live_…',
+});
 
-const { data: products } = await storefront.products.list({ search: 'mug', per_page: 12 });
+const { data: products } = await storefront.products.list({
+    search: 'mug',
+    per_page: 12,
+});
 const cart = await storefront.createCart();
 await storefront.cart(cart.cart_token).addItem(products[0].id, 2);
-const { checkout_url } = await storefront.cart(cart.cart_token).checkout({ return_path: '/thanks' });
+const { checkout_url } = await storefront
+    .cart(cart.cart_token)
+    .checkout({ return_path: '/thanks' });
 // Open checkout_url in the shopper's browser.
 ```
 
 **Shopper sign-in** uses OAuth with PKCE on the shop's own page:
+
 1. Call `createPkcePair()` and `createState()`.
 2. Send the shopper to `storefront.signIn.authorizeUrl(…)`.
 3. Exchange the code with `storefront.signIn.exchangeCode(…)`.
@@ -34,16 +43,23 @@ import { AdminClient } from '@storehugs/integration';
 
 const admin = new AdminClient({ apiKey: process.env.STOREHUGS_ADMIN_KEY! });
 
-for await (const order of admin.orders.all({ updated_since: '2026-11-01T00:00:00Z' })) {
+for await (const order of admin.orders.all({
+    updated_since: '2026-11-01T00:00:00Z',
+})) {
     // Every page is fetched as you read.
 }
 
 await admin.setInventory([{ sku: 'MUG-01', stock_quantity: 40 }]);
 const product = await admin.products.get(12);
-await admin.products.update(12, { price: 19.5 }, { unmodifiedSince: product.updated_at ?? undefined }); // 409 edit_conflict if it changed
+await admin.products.update(
+    12,
+    { price: 19.5 },
+    { unmodifiedSince: product.updated_at ?? undefined },
+); // 409 edit_conflict if it changed
 ```
 
 **Apps** get an Admin key, not an OAuth token:
+
 1. Send the merchant to `AdminClient.authorizeAppUrl({ clientId, redirectUri, scopes, state, codeChallenge })`.
 2. On your server, call `AdminClient.exchangeAppCode(…)` within 10 minutes. It returns `{ api_key, scopes, shop }`, and the key is shown only that once.
 
@@ -75,8 +91,16 @@ A weekly workflow regenerates the types from the published spec and fails when t
 
 ## Releasing
 
-1. Update `version` in `package.json` and `CHANGELOG.md`.
-2. Publish a GitHub release. The **Publish** workflow publishes to npm with provenance. It needs an `NPM_TOKEN` secret.
+1. Update `version` in `package.json` and `CHANGELOG.md`, and commit to `master`.
+2. Tag the commit and push the tag:
+
+    ```bash
+    git tag v0.1.0 && git push origin v0.1.0
+    ```
+
+    The **Publish** workflow then tests and builds on Node 22, 24 and 26 and publishes to npm with provenance. It refuses a tag that doesn't match `package.json`, and it needs an `NPM_TOKEN` secret.
+
+CI on pushes and pull requests checks formatting, types and tests only. It doesn't build or publish.
 
 ## License
 
