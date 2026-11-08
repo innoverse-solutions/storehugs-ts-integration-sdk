@@ -46,7 +46,7 @@ export interface AdminClientOptions {
 
 /** A change sent only if the record is unchanged since you read it (else 409 `edit_conflict`). */
 export interface UpdateOptions {
-    /** The record's `updated_at` as you read it. */
+    /** The record's `updatedAt` as you read it. */
     unmodifiedSince?: string;
     idempotencyKey?: string;
 }
@@ -55,7 +55,7 @@ export interface ListQuery extends Query {
     limit?: number;
     cursor?: string;
     /** ISO 8601: changes since then, oldest first, for incremental sync. */
-    updated_since?: string;
+    updatedSince?: string;
 }
 
 interface Single<T> {
@@ -115,7 +115,7 @@ export class AdminClient {
                     ...options,
                     body: input,
                 }),
-            /** Changes only the fields sent; images are added unless `image_mode` is `replace`. */
+            /** Changes only the fields sent; images are added unless `imageMode` is `replace`. */
             update: (
                 id: number,
                 changes: Partial<AdminProductInput>,
@@ -135,7 +135,7 @@ export class AdminClient {
                 Order,
                 ListQuery & {
                     status?: string;
-                    payment_status?: string;
+                    paymentStatus?: string;
                     source?: string;
                 }
             >('/orders'),
@@ -182,10 +182,7 @@ export class AdminClient {
                 this.unwrap<AdminCustomer>(
                     'PUT',
                     `/customers/${id}/membership`,
-                    this.update(
-                        { wholesale_membership_id: wholesaleMembershipId },
-                        options,
-                    ),
+                    this.update({ wholesaleMembershipId }, options),
                 ),
         };
 
@@ -207,7 +204,7 @@ export class AdminClient {
                 ListQuery & {
                     status?: string;
                     rating?: number;
-                    product_id?: number;
+                    productId?: number;
                 }
             >('/reviews'),
             get: (id: number) =>
@@ -236,8 +233,8 @@ export class AdminClient {
                 AdminQuotation,
                 ListQuery & {
                     status?: string;
-                    customer_id?: number;
-                    quotation_number?: string;
+                    customerId?: number;
+                    quotationNumber?: string;
                 }
             >('/quotations'),
             get: (id: number) =>

@@ -74,7 +74,7 @@ test('all() follows cursors until the last page', async () => {
         json({
             data: ids.map((id) => ({ id })),
             links: {},
-            meta: { next_cursor: next },
+            meta: { nextCursor: next },
         });
     const { fetch, requests } = fakeFetch(page([1, 2], 'abc'), page([3], null));
     const admin = new AdminClient({ apiKey: 'sa_live_x', fetch });
@@ -128,7 +128,7 @@ test('a quotation action is posted to its own path, with the order made', async 
     const { fetch, requests } = fakeFetch(
         json({
             data: { id: 5, status: 'agreed' },
-            order: { id: 9, order_number: 'A-9' },
+            order: { id: 9, orderNumber: 'A-9' },
         }),
     );
     const admin = new AdminClient({ apiKey: 'sa_live_x', fetch });

@@ -2,7 +2,6 @@ import { Transport } from './http.ts';
 import type { FetchLike, Query, RequestOptions } from './http.ts';
 import type {
     Cart,
-    CategoryType,
     CheckoutLink,
     CheckoutOptions,
     Customer,
@@ -16,6 +15,8 @@ import type {
     ShippingEstimate,
     StorefrontPage,
     StorefrontShop,
+    Taxonomy,
+    TaxonomyTerm,
     TokenSet,
 } from './types.ts';
 
@@ -38,16 +39,16 @@ export interface StorefrontClientOptions {
 
 export interface ProductQuery extends Query {
     search?: string;
-    /** Category term ids. */
-    category?: number[];
-    min_price?: number;
-    max_price?: number;
-    in_stock?: boolean;
+    /** Term ids from any classifications (see `taxonomies.terms`). */
+    taxonomy?: number[];
+    minPrice?: number;
+    maxPrice?: number;
+    inStock?: boolean;
     featured?: boolean;
     sort?: string;
     page?: number;
     /** Up to 50. */
-    per_page?: number;
+    perPage?: number;
 }
 
 interface Single<T> {
@@ -64,6 +65,7 @@ export class StorefrontClient {
     private readonly transport: Transport;
 
     readonly products;
+    readonly taxonomies;
     readonly customer;
 
     constructor(options: StorefrontClientOptions) {
@@ -95,6 +97,18 @@ export class StorefrontClient {
                 this.unwrap<ProductDetail>(
                     'GET',
                     `/products/${encodeURIComponent(slug)}`,
+                ),
+        };
+
+        /** The shop's classifications (Category, Brand…) and their terms. */
+        this.taxonomies = {
+            /** Every classification, in the panel's order, without its terms. */
+            list: () => this.unwrap<Taxonomy[]>('GET', '/taxonomies'),
+            /** A classification's terms by its slug, as a tree; a term's id filters `products.list`. */
+            terms: (taxonomy: string) =>
+                this.unwrap<TaxonomyTerm[]>(
+                    'GET',
+                    `/taxonomies/${encodeURIComponent(taxonomy)}/terms`,
                 ),
         };
 
@@ -148,7 +162,7 @@ export class StorefrontClient {
                 /** Answers with the whole wishlist. */
                 add: (productId: number) =>
                     this.unwrap<Product[]>('POST', '/customer/wishlist', {
-                        body: { product_id: productId },
+                        body: { productId },
                     }),
                 /** Answers with the whole wishlist. */
                 remove: (productId: number) =>
@@ -164,17 +178,13 @@ export class StorefrontClient {
         return this.unwrap<StorefrontShop>('GET', '/shop');
     }
 
-    categories(): Promise<CategoryType[]> {
-        return this.unwrap<CategoryType[]>('GET', '/categories');
-    }
-
     page(
         page: 'about' | 'contact-us' | 'terms-conditions' | 'privacy-policy',
     ): Promise<StorefrontPage> {
         return this.unwrap<StorefrontPage>('GET', `/pages/${page}`);
     }
 
-    /** A new cart; keep its `cart_token` (with a shopper's token, the cart is theirs). */
+    /** A new cart; keep its `cartToken` (with a shopper's token, the cart is theirs). */
     createCart(options?: RequestOptions): Promise<Cart> {
         return this.unwrap<Cart>('POST', '/carts', options);
     }
@@ -284,7 +294,7 @@ export class CartSession {
             'POST',
             '/cart/items',
             this.token,
-            { ...options, body: { product_id: productId, quantity } },
+            { ...options, body: { productId, quantity } },
         );
     }
 

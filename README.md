@@ -9,6 +9,8 @@ A TypeScript client for the Store Hugs Integration API. It has no dependencies a
 - **Storefront API:** the catalog, carts and checkout links, and signed-in shoppers on the shop's host. Use a publishable key in browsers on the sites it lists, or a secret key on your server.
 - **Admin API:** the merchant's own systems and connected apps. Use an Admin key (`sa_live_…`) on your server only.
 
+Field names are camelCase in queries, request bodies, answers and webhook payloads (`perPage`, `cartToken`, `updatedAt`). The OAuth token answers are the exception: they keep the standard `access_token`, `refresh_token`, `expires_in` and, for apps, `api_key`.
+
 The full reference is at https://developers.storehugs.com (`/openapi.yaml`). Report issues and send changes at https://github.com/innoverse-solutions/storehugs-ts-integration-sdk.
 
 ## Storefront
@@ -23,14 +25,14 @@ const storefront = new StorefrontClient({
 
 const { data: products } = await storefront.products.list({
     search: 'mug',
-    per_page: 12,
+    perPage: 12,
 });
 const cart = await storefront.createCart();
-await storefront.cart(cart.cart_token).addItem(products[0].id, 2);
-const { checkout_url } = await storefront
-    .cart(cart.cart_token)
-    .checkout({ return_path: '/thanks' });
-// Open checkout_url in the shopper's browser.
+await storefront.cart(cart.cartToken).addItem(products[0].id, 2);
+const { checkoutUrl } = await storefront
+    .cart(cart.cartToken)
+    .checkout({ returnPath: '/thanks' });
+// Open checkoutUrl in the shopper's browser.
 ```
 
 **Shopper sign-in** uses OAuth with PKCE on the shop's own page:
@@ -48,17 +50,17 @@ import { AdminClient } from '@storehugs/integration';
 const admin = new AdminClient({ apiKey: process.env.STOREHUGS_ADMIN_KEY! });
 
 for await (const order of admin.orders.all({
-    updated_since: '2026-11-01T00:00:00Z',
+    updatedSince: '2026-11-01T00:00:00Z',
 })) {
     // Every page is fetched as you read.
 }
 
-await admin.setInventory([{ sku: 'MUG-01', stock_quantity: 40 }]);
+await admin.setInventory([{ sku: 'MUG-01', stockQuantity: 40 }]);
 const product = await admin.products.get(12);
 await admin.products.update(
     12,
     { price: 19.5 },
-    { unmodifiedSince: product.updated_at ?? undefined },
+    { unmodifiedSince: product.updatedAt ?? undefined },
 ); // 409 edit_conflict if it changed
 ```
 

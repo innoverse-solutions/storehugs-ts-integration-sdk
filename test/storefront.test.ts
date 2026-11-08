@@ -15,14 +15,14 @@ test('catalog calls send the key, locale and Laravel-style arrays', async () => 
     });
 
     await storefront.products.list({
-        category: [3, 4],
-        in_stock: true,
-        per_page: 20,
+        taxonomy: [3, 4],
+        inStock: true,
+        perPage: 20,
     });
 
     assert.equal(
         requests[0]?.url,
-        'https://acme.storehugs.com/api/v1/products?category%5B%5D=3&category%5B%5D=4&in_stock=1&per_page=20',
+        'https://acme.storehugs.com/api/v1/products?taxonomy%5B%5D=3&taxonomy%5B%5D=4&inStock=1&perPage=20',
     );
     assert.equal(requests[0]?.headers['X-Storehugs-Key'], 'pk_live_x');
     assert.equal(requests[0]?.headers['Accept-Language'], 'ar');
@@ -31,8 +31,8 @@ test('catalog calls send the key, locale and Laravel-style arrays', async () => 
 
 test('a cart session sends its token, and a secret key names the shopper', async () => {
     const { fetch, requests } = fakeFetch(
-        json({ data: { cart_token: 't1' } }, 201),
-        json({ data: { cart_token: 't1' } }),
+        json({ data: { cartToken: 't1' } }, 201),
+        json({ data: { cartToken: 't1' } }),
     );
     const storefront = new StorefrontClient({
         host: 'https://shop.example.com',
@@ -42,7 +42,7 @@ test('a cart session sends its token, and a secret key names the shopper', async
     });
 
     const cart = await storefront.createCart();
-    await storefront.cart(cart.cart_token).addItem(12, 2);
+    await storefront.cart(cart.cartToken).addItem(12, 2);
 
     assert.equal(
         requests[1]?.url,
@@ -50,7 +50,7 @@ test('a cart session sends its token, and a secret key names the shopper', async
     );
     assert.equal(requests[1]?.headers['X-Cart-Token'], 't1');
     assert.equal(requests[1]?.headers['X-Shopper-Ip'], '203.0.113.7');
-    assert.deepEqual(requests[1]?.body, { product_id: 12, quantity: 2 });
+    assert.deepEqual(requests[1]?.body, { productId: 12, quantity: 2 });
 });
 
 test("a signed-in shopper's calls carry their token", async () => {
@@ -127,4 +127,39 @@ test('removing from the wishlist answers with the whole wishlist', async () => {
         wishlist.map((product) => product.id),
         [3],
     );
+});
+
+test('classifications are listed, and a classification names its terms by slug', async () => {
+    const { fetch, requests } = fakeFetch(
+        json({
+            data: [
+                {
+                    id: 1,
+                    slug: 'brand',
+                    name: 'Brand',
+                    isTree: false,
+                    isMultiple: false,
+                },
+            ],
+        }),
+        json({ data: [{ id: 7, slug: 'acme', name: 'Acme', children: [] }] }),
+    );
+    const storefront = new StorefrontClient({
+        host: 'acme.storehugs.com',
+        key: 'pk_live_x',
+        fetch,
+    });
+
+    const [brand] = await storefront.taxonomies.list();
+    const terms = await storefront.taxonomies.terms(brand!.slug);
+
+    assert.equal(
+        requests[0]?.url,
+        'https://acme.storehugs.com/api/v1/taxonomies',
+    );
+    assert.equal(
+        requests[1]?.url,
+        'https://acme.storehugs.com/api/v1/taxonomies/brand/terms',
+    );
+    assert.equal(terms[0]?.id, 7);
 });

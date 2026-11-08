@@ -40,9 +40,9 @@ export interface CursorPage<T> {
     };
     meta: {
         path: string;
-        per_page: number;
-        next_cursor: string | null;
-        prev_cursor: string | null;
+        perPage: number;
+        nextCursor: string | null;
+        prevCursor: string | null;
     };
 }
 
@@ -171,7 +171,7 @@ export class Transport {
             );
 
             yield* page.data;
-            cursor = page.meta.next_cursor;
+            cursor = page.meta.nextCursor;
         } while (cursor !== null);
     }
 

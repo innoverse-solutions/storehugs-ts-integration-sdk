@@ -9,7 +9,7 @@ export interface ErrorBody {
 
 export interface ValidationError {
     message: string;
-    /** Messages by field (dot notation for nested fields, e.g. `items.0.product_id`). */
+    /** Messages by field (dot notation for nested fields, e.g. `items.0.productId`). */
     errors: Record<string, Array<string>>;
 }
 
@@ -28,7 +28,7 @@ export interface Money {
     formatted: string;
 }
 
-/** The record's `updated_at` as you read it; a newer record gets 409 `edit_conflict`. */
+/** The record's `updatedAt` as you read it; a newer record gets 409 `edit_conflict`. */
 export type UpdatedAtGuard = string | null;
 
 export interface CursorPageEnvelope {
@@ -40,9 +40,9 @@ export interface CursorPageEnvelope {
     };
     meta: {
         path: string;
-        per_page: number;
-        next_cursor: string | null;
-        prev_cursor: string | null;
+        perPage: number;
+        nextCursor: string | null;
+        prevCursor: string | null;
     };
 }
 
@@ -54,9 +54,9 @@ export interface NumberedPageEnvelope {
         next: string | null;
     };
     meta: {
-        current_page: number;
+        currentPage: number;
         from: number | null;
-        last_page: number;
+        lastPage: number;
         links: Array<{
             url: string | null;
             label: string;
@@ -64,7 +64,7 @@ export interface NumberedPageEnvelope {
             active: boolean;
         }>;
         path: string;
-        per_page: number;
+        perPage: number;
         to: number | null;
         total: number;
     };
@@ -153,20 +153,20 @@ export interface StorefrontShop {
     logo: string | null;
     /** The language this response is in. */
     locale: string;
-    default_language: string;
+    defaultLanguage: string;
     languages: Array<string>;
     currency: string;
-    prices_include_tax: boolean;
-    payment_methods: Array<{
+    pricesIncludeTax: boolean;
+    paymentMethods: Array<{
         id: string;
         label: string;
     }>;
     /** False when the shop takes no orders through a cart (cart endpoints answer 409 `cart_disabled`). */
-    cart_available: boolean;
+    cartAvailable: boolean;
     /** Whether `POST /api/v1/cart/shipping-estimate` is available. */
-    shipping_estimates: boolean;
+    shippingEstimates: boolean;
     /** The merchant's own site, where checkout sends shoppers back to. */
-    site_url: string | null;
+    siteUrl: string | null;
 }
 
 export type Rating = {
@@ -180,9 +180,9 @@ export interface ProductSummary {
     title: string | null;
     sku: string | null;
     price: Money;
-    regular_price: Money;
-    on_sale: boolean;
-    in_stock: boolean;
+    regularPrice: Money;
+    onSale: boolean;
+    inStock: boolean;
     rating: Rating;
     image: string | null;
 }
@@ -191,11 +191,11 @@ export type ProductDetail = ProductSummary & {
     /** Purified HTML. */
     description: string | null;
     /** Purified HTML. */
-    short_description: string | null;
-    part_number: string | null;
+    shortDescription: string | null;
+    partNumber: string | null;
     unit: string | null;
     /** Null when the product doesn't track stock. */
-    stock_quantity: number | null;
+    stockQuantity: number | null;
     images: Array<string>;
     categories: Array<{
         id: number;
@@ -213,8 +213,8 @@ export type ProductDetail = ProductSummary & {
     }>;
     /** Null when the shop has reviews off. */
     reviews: {
-        average_rating: number;
-        total_reviews: number;
+        averageRating: number;
+        totalReviews: number;
         /** Review counts by star rating. */
         distribution: {
             '1': number;
@@ -226,30 +226,35 @@ export type ProductDetail = ProductSummary & {
     } | null;
     /** The product's siblings in its variable product group that this storefront sells, this product included. */
     variants: Array<{
-        product_id: number;
+        productId: number;
         slug: string;
-        is_this_product: boolean;
+        isThisProduct: boolean;
         options: Array<{
             type: string | null;
             value: string | null;
         }>;
         price: Money;
-        in_stock: boolean;
+        inStock: boolean;
     }>;
 };
 
-export interface CategoryType {
+export interface Taxonomy {
     id: number;
+    /** Names the classification in `/api/v1/taxonomies/{taxonomy}/terms`. */
     slug: string;
     name: string | null;
-    terms: Array<CategoryTerm>;
+    /** Its terms have levels (a term under another). */
+    isTree: boolean;
+    /** A product may have more than one of its terms. */
+    isMultiple: boolean;
 }
 
-export interface CategoryTerm {
+export interface TaxonomyTerm {
+    /** Filters the product list (`taxonomy[]`). */
     id: number;
     slug: string;
     name: string | null;
-    children: Array<CategoryTerm>;
+    children: Array<TaxonomyTerm>;
 }
 
 export interface StorefrontPage {
@@ -261,76 +266,76 @@ export interface StorefrontPage {
 
 export interface Cart {
     /** Send it as `X-Cart-Token`. */
-    cart_token: string;
+    cartToken: string;
     /** `enquiry`: a wholesale member's cart, sent to the shop as a quotation request. */
     mode: 'checkout' | 'enquiry';
     /** The shopper the cart belongs to; null for a guest cart. */
-    customer_id: number | null;
+    customerId: number | null;
     items: Array<CartItem>;
-    total_quantity: number;
+    totalQuantity: number;
     subtotal: Money;
     discount: Money;
     coupon: {
         code: string;
-        auto_applied: boolean;
+        autoApplied: boolean;
     } | null;
     /** Why the coupon on the cart doesn't apply now. */
-    coupon_error: string | null;
+    couponError: string | null;
     /** Labels of the offers applied. */
     offers: Array<string>;
-    tax_added: Money;
-    tax_included: Money;
-    total_before_shipping: Money;
+    taxAdded: Money;
+    taxIncluded: Money;
+    totalBeforeShipping: Money;
 }
 
 export interface CartItem {
     id: number;
-    product_id: number;
+    productId: number;
     slug: string | null;
     title: string | null;
     image: string | null;
     quantity: number;
-    unit_price: Money;
-    line_total: Money;
+    unitPrice: Money;
+    lineTotal: Money;
 }
 
-/** For countries with listed locations, pick the state, city and neighbourhood by id (`/shipping-locations` lookups), or set `shipping_location_unlisted`. */
+/** For countries with listed locations, pick the state, city and neighbourhood by id (`/shipping-locations` lookups), or set `shippingLocationUnlisted`. */
 export interface ShippingDestination {
     /** ISO 3166-1 alpha-3. */
-    shipping_country_code: string;
-    shipping_city?: string | null;
-    shipping_state?: string | null;
-    shipping_postal_code?: string | null;
-    shipping_address_line_1?: string | null;
-    shipping_state_id?: number | null;
-    shipping_city_id?: number | null;
-    shipping_neighbourhood_id?: number | null;
-    shipping_location_unlisted?: boolean | null;
+    shippingCountryCode: string;
+    shippingCity?: string | null;
+    shippingState?: string | null;
+    shippingPostalCode?: string | null;
+    shippingAddressLine1?: string | null;
+    shippingStateId?: number | null;
+    shippingCityId?: number | null;
+    shippingNeighbourhoodId?: number | null;
+    shippingLocationUnlisted?: boolean | null;
 }
 
 export interface ShippingEstimate {
     /** Whether the shop ships to the country. */
-    ships_to: boolean;
+    shipsTo: boolean;
     /** True for a shop without shipping zones (ships anywhere, free). */
-    ships_free: boolean;
+    shipsFree: boolean;
     /** Empty for an empty or digital-only cart. */
     quotes: Array<{
-        method_id: number;
+        methodId: number;
         name: string;
         /** A plain amount in the shop's base currency (not a Money object). */
         cost: number;
-        is_live_rate: boolean;
-        is_carrier_price: boolean;
+        isLiveRate: boolean;
+        isCarrierPrice: boolean;
     }>;
 }
 
 export interface CheckoutLink {
     /** Open it in the shopper's browser. Single use. */
-    checkout_url: string;
-    expires_at: string;
+    checkoutUrl: string;
+    expiresAt: string;
     mode: 'checkout' | 'enquiry';
     /** The browser must be signed in on the checkout host as the cart's owner. */
-    requires_sign_in: boolean;
+    requiresSignIn: boolean;
 }
 
 export type ShopperTokenRequest =
@@ -360,13 +365,13 @@ export interface StorefrontCustomer {
     id: number;
     name: string;
     email: string | null;
-    email_verified: boolean;
+    emailVerified: boolean;
     phone: string | null;
     wholesale: {
         name: string;
     } | null;
     /** The shopper's account page on the shop's host. */
-    account_url: string;
+    accountUrl: string;
 }
 
 export interface CustomerAddress {
@@ -374,111 +379,111 @@ export interface CustomerAddress {
     label: string | null;
     name: string;
     phone: string;
-    country_code: string;
+    countryCode: string;
     state: string | null;
-    state_id: number | null;
+    stateId: number | null;
     city: string | null;
-    city_id: number | null;
+    cityId: number | null;
     neighbourhood: string | null;
-    neighbourhood_id: number | null;
-    address_line_1: string;
-    address_line_2: string | null;
-    postal_code: string | null;
-    is_default: boolean;
+    neighbourhoodId: number | null;
+    addressLine1: string;
+    addressLine2: string | null;
+    postalCode: string | null;
+    isDefault: boolean;
 }
 
-/** For countries with listed locations, `shipping_state_id` is required, then `shipping_city_id` and `shipping_neighbourhood_id` where the picked place has them; or set `shipping_location_unlisted` and type the city. */
+/** For countries with listed locations, `shippingStateId` is required, then `shippingCityId` and `shippingNeighbourhoodId` where the picked place has them; or set `shippingLocationUnlisted` and type the city. */
 export interface CustomerAddressInput {
     label?: string | null;
     name: string;
     phone: string;
     /** ISO 3166-1 alpha-3, one the shop ships to. */
-    country_code: string;
+    countryCode: string;
     city: string;
     state?: string | null;
-    address_line_1: string;
-    address_line_2?: string | null;
-    postal_code?: string | null;
-    is_default?: boolean;
-    shipping_state_id?: number | null;
-    shipping_city_id?: number | null;
-    shipping_neighbourhood_id?: number | null;
-    shipping_location_unlisted?: boolean | null;
+    addressLine1: string;
+    addressLine2?: string | null;
+    postalCode?: string | null;
+    isDefault?: boolean;
+    shippingStateId?: number | null;
+    shippingCityId?: number | null;
+    shippingNeighbourhoodId?: number | null;
+    shippingLocationUnlisted?: boolean | null;
 }
 
 export interface Order {
     id: number;
-    order_number: string;
+    orderNumber: string;
     status: OrderStatus;
-    payment_status: PaymentStatus | unknown | null;
-    payment_method: string | null;
+    paymentStatus: PaymentStatus | unknown | null;
+    paymentMethod: string | null;
     /** checkout, whatsapp, quotation or enquiry. */
     source: string;
-    placed_at: string | null;
-    paid_at: string | null;
+    placedAt: string | null;
+    paidAt: string | null;
     customer: {
         id: number | null;
         name: string | null;
         email: string | null;
         phone: string | null;
     };
-    shipping_address: {
-        line_1: string | null;
-        line_2: string | null;
+    shippingAddress: {
+        line1: string | null;
+        line2: string | null;
         neighbourhood: string | null;
         city: string | null;
         state: string | null;
-        postal_code: string | null;
-        country_code: string | null;
+        postalCode: string | null;
+        countryCode: string | null;
     };
     /** Null when billing is the shipping address. */
-    billing_address: {
+    billingAddress: {
         name: string | null;
         phone: string | null;
-        line_1: string | null;
-        line_2: string | null;
+        line1: string | null;
+        line2: string | null;
         city: string | null;
         state: string | null;
-        postal_code: string | null;
-        country_code: string | null;
+        postalCode: string | null;
+        countryCode: string | null;
     } | null;
-    shipping_method: string | null;
+    shippingMethod: string | null;
     notes: string | null;
     items: Array<{
-        product_id: number | null;
+        productId: number | null;
         title: string | null;
         sku: string | null;
         quantity: number;
-        unit_price: Money;
+        unitPrice: Money;
         total: Money;
     }>;
     subtotal: Money;
     discount: Money;
-    coupon_code: string | null;
-    shipping_fee: Money;
+    couponCode: string | null;
+    shippingFee: Money;
     tax: Money;
     total: Money;
     refunded: Money;
     shipment: {
         carrier: string | null;
-        tracking_number: string | null;
+        trackingNumber: string | null;
         /** The shipment status's label, in the response language. */
         status: string | null;
     } | null;
-    receipt_url: string;
-    updated_at: string | null;
+    receiptUrl: string;
+    updatedAt: string | null;
 }
 
 export interface AdminShop {
     id: number;
     name: string;
-    storefront_url: string;
-    is_live: boolean;
+    storefrontUrl: string;
+    isLive: boolean;
     currency: string;
-    default_language: string;
+    defaultLanguage: string;
     languages: Array<string>;
     timezone: string | null;
-    prices_include_tax: boolean;
+    pricesIncludeTax: boolean;
     plan: 'freemium' | 'basic' | 'pro' | 'business';
     /** Whether the hosted storefront redirects to the merchant's site. */
     headless: boolean;
@@ -508,24 +513,24 @@ export interface ApiKey {
     type: 'publishable' | 'secret';
     /** A publishable key's full value; a secret key masked (`sk_live_…abcd`). */
     key: string;
-    allowed_origins: Array<string> | null;
+    allowedOrigins: Array<string> | null;
     /** The publishable key's sign-in client id. */
-    oauth_client_id: string | null;
-    redirect_uris: Array<string>;
+    oauthClientId: string | null;
+    redirectUris: Array<string>;
     /** The name of the app that made the key. */
-    created_by_app: string | null;
-    last_used_at: string | null;
-    created_at: string | null;
-    updated_at: string | null;
+    createdByApp: string | null;
+    lastUsedAt: string | null;
+    createdAt: string | null;
+    updatedAt: string | null;
 }
 
 export interface ApiKeyInput {
     name: string;
     type: 'publishable' | 'secret';
     /** Required for a publishable key, prohibited for a secret one. Site origins, such as `https://www.example.com`. */
-    allowed_origins?: Array<string>;
+    allowedOrigins?: Array<string>;
     /** Publishable keys only. Sign-in return addresses on the allowed sites. */
-    redirect_uris?: Array<string> | null;
+    redirectUris?: Array<string> | null;
 }
 
 /** Text by language code. An empty value is returned as an empty array `[]`. */
@@ -535,55 +540,55 @@ export interface AdminProduct {
     id: number;
     slug: string;
     title: LocalizedText;
-    short_description: LocalizedText;
+    shortDescription: LocalizedText;
     description: LocalizedText;
     sku: string | null;
-    part_number: string | null;
+    partNumber: string | null;
     type: 'physical' | 'digital';
-    download_limit: number | null;
-    document_url: string | null;
+    downloadLimit: number | null;
+    documentUrl: string | null;
     /** True when published. */
     status: boolean;
-    is_featured: boolean | null;
+    isFeatured: boolean | null;
     noindex: boolean | null;
     price: number | null;
-    sale_price: number | null;
-    is_sale_scheduled: boolean | null;
-    sale_starts_at: string | null;
-    sale_ends_at: string | null;
-    wholesale_price: number | null;
-    manage_stock: boolean | null;
-    stock_quantity: number | null;
-    low_stock_amount: number | null;
-    stock_status: 'in_stock' | 'out_of_stock' | null;
-    unit_id: number | null;
-    tax_class_id: number | null;
+    salePrice: number | null;
+    isSaleScheduled: boolean | null;
+    saleStartsAt: string | null;
+    saleEndsAt: string | null;
+    wholesalePrice: number | null;
+    manageStock: boolean | null;
+    stockQuantity: number | null;
+    lowStockAmount: number | null;
+    stockStatus: 'in_stock' | 'out_of_stock' | null;
+    unitId: number | null;
+    taxClassId: number | null;
     weight: number | null;
     length: number | null;
     width: number | null;
     height: number | null;
-    taxonomy_term_ids: Array<number>;
-    spec_template_id: number | null;
-    variable_product_id: number | null;
+    taxonomyTermIds: Array<number>;
+    specTemplateId: number | null;
+    variableProductId: number | null;
     thumbnail: string | null;
     gallery: Array<string>;
-    created_at: string | null;
-    updated_at: string | null;
+    createdAt: string | null;
+    updatedAt: string | null;
 }
 
-/** The panel's product rules apply (e.g. `stock_quantity` when `manage_stock`, `stock_status` otherwise; `digital_url` for a digital product). */
+/** The panel's product rules apply (e.g. `stockQuantity` when `manageStock`, `stockStatus` otherwise; `digitalUrl` for a digital product). */
 export interface ProductInput {
     /** The title in the shop's default language. */
     title?: string;
     /** Titles in the shop's other languages. */
     translations?: Record<string, string | null> | null;
     /** In the default language. Bold, underline, strikethrough, overline and lists are kept. */
-    short_description?: string | null;
-    short_description_translations?: Record<string, string | null> | null;
+    shortDescription?: string | null;
+    shortDescriptionTranslations?: Record<string, string | null> | null;
     /** In the default language. HTML is kept; plain text becomes paragraphs. */
     description?: string | null;
-    description_translations?: Record<string, string | null> | null;
-    taxonomy_term_ids?: Array<number> | null;
+    descriptionTranslations?: Record<string, string | null> | null;
+    taxonomyTermIds?: Array<number> | null;
     /** The first is the thumbnail. */
     images?: Array<{
         /** An https URL. Required without `data`. */
@@ -592,81 +597,81 @@ export interface ProductInput {
         data?: string | null;
     }> | null;
     /** Older form of `images`. */
-    image_urls?: Array<string> | null;
+    imageUrls?: Array<string> | null;
     sku?: string | null;
-    part_number?: string | null;
+    partNumber?: string | null;
     price?: number | null;
-    sale_price?: number | null;
-    is_sale_scheduled?: boolean | null;
-    sale_starts_at?: string | null;
-    sale_ends_at?: string | null;
-    wholesale_price?: number | null;
-    manage_stock?: boolean | null;
-    stock_quantity?: number | null;
-    stock_status?: 'in_stock' | 'out_of_stock' | null;
-    low_stock_amount?: number | null;
-    unit_id?: number | null;
-    tax_class_id?: number | null;
+    salePrice?: number | null;
+    isSaleScheduled?: boolean | null;
+    saleStartsAt?: string | null;
+    saleEndsAt?: string | null;
+    wholesalePrice?: number | null;
+    manageStock?: boolean | null;
+    stockQuantity?: number | null;
+    stockStatus?: 'in_stock' | 'out_of_stock' | null;
+    lowStockAmount?: number | null;
+    unitId?: number | null;
+    taxClassId?: number | null;
     type?: 'physical' | 'digital';
     /** Required for a digital product; a public https file URL. */
-    digital_url?: string | null;
-    download_limit?: number | null;
-    document_url?: string | null;
+    digitalUrl?: string | null;
+    downloadLimit?: number | null;
+    documentUrl?: string | null;
     /** Published. Defaults to false (hidden) when creating. */
     status?: boolean;
-    is_featured?: boolean | null;
+    isFeatured?: boolean | null;
     noindex?: boolean | null;
     weight?: number | null;
     length?: number | null;
     width?: number | null;
     height?: number | null;
     /** Plans with specification templates only. */
-    spec_template_id?: number | null;
+    specTemplateId?: number | null;
     /** Specification values by property id; a text property's string is its default-language value. */
     specs?: Record<string, unknown> | null;
-    related_product_ids?: Array<number> | null;
+    relatedProductIds?: Array<number> | null;
     /** B2B plans only. */
-    wholesale_prices?: Array<{
-        wholesale_membership_id: number;
+    wholesalePrices?: Array<{
+        wholesaleMembershipId: number;
         price?: number | null;
     }> | null;
     /** B2B plans only. */
-    quantity_tiers?: Array<{
-        min_quantity: number;
+    quantityTiers?: Array<{
+        minQuantity: number;
         price: number;
     }> | null;
 }
 
-/** Name the product by `product_id` or `sku`, and set `stock_quantity` or `stock_status`. */
+/** Name the product by `productId` or `sku`, and set `stockQuantity` or `stockStatus`. */
 export interface InventoryItemInput {
-    product_id?: number | null;
+    productId?: number | null;
     sku?: string | null;
     /** Turns stock tracking on. */
-    stock_quantity?: number | null;
+    stockQuantity?: number | null;
     /** Turns stock tracking off. */
-    stock_status?: 'in_stock' | 'out_of_stock' | null;
+    stockStatus?: 'in_stock' | 'out_of_stock' | null;
 }
 
 export interface InventoryResult {
     id: number;
     sku: string | null;
-    manage_stock: boolean;
-    stock_quantity: number | null;
-    stock_status: string | null;
-    updated_at: string | null;
+    manageStock: boolean;
+    stockQuantity: number | null;
+    stockStatus: string | null;
+    updatedAt: string | null;
 }
 
 export interface AdminCustomer {
     id: number;
     name: string;
     email: string | null;
-    email_verified: boolean;
+    emailVerified: boolean;
     phone: string | null;
-    phone_verified: boolean;
+    phoneVerified: boolean;
     wholesale: boolean;
-    wholesale_membership_id: number | null;
-    created_at: string | null;
-    updated_at: string | null;
+    wholesaleMembershipId: number | null;
+    createdAt: string | null;
+    updatedAt: string | null;
 }
 
 export interface AdminCoupon {
@@ -674,19 +679,19 @@ export interface AdminCoupon {
     code: string;
     type: 'percentage' | 'fixed';
     value: number;
-    min_order_value: number | null;
-    max_discount_amount: number | null;
-    usage_limit: number | null;
-    usage_limit_per_customer: number | null;
-    used_count: number | null;
-    auto_apply: boolean;
-    first_order_only: boolean;
-    combinable_with_offers: boolean;
-    starts_at: string | null;
-    ends_at: string | null;
+    minOrderValue: number | null;
+    maxDiscountAmount: number | null;
+    usageLimit: number | null;
+    usageLimitPerCustomer: number | null;
+    usedCount: number | null;
+    autoApply: boolean;
+    firstOrderOnly: boolean;
+    combinableWithOffers: boolean;
+    startsAt: string | null;
+    endsAt: string | null;
     status: boolean;
-    created_at: string | null;
-    updated_at: string | null;
+    createdAt: string | null;
+    updatedAt: string | null;
 }
 
 export interface CouponInput {
@@ -695,19 +700,19 @@ export interface CouponInput {
     type?: 'percentage' | 'fixed';
     /** At most 100 for a percentage. */
     value?: number;
-    min_order_value?: number | null;
-    max_discount_amount?: number | null;
-    usage_limit?: number | null;
-    usage_limit_per_customer?: number | null;
-    auto_apply?: boolean | null;
-    first_order_only?: boolean | null;
-    combinable_with_offers?: boolean | null;
-    starts_at?: string | null;
-    ends_at?: string | null;
+    minOrderValue?: number | null;
+    maxDiscountAmount?: number | null;
+    usageLimit?: number | null;
+    usageLimitPerCustomer?: number | null;
+    autoApply?: boolean | null;
+    firstOrderOnly?: boolean | null;
+    combinableWithOffers?: boolean | null;
+    startsAt?: string | null;
+    endsAt?: string | null;
     /** Limits the coupon to term ids, by taxonomy type id. Not returned in responses. */
-    taxonomy_filters?: Record<string, Array<number> | null> | null;
+    taxonomyFilters?: Record<string, Array<number> | null> | null;
     /** Not returned in responses. */
-    taxonomy_labels?: Record<string, string | null> | null;
+    taxonomyLabels?: Record<string, string | null> | null;
     status?: boolean | null;
 }
 
@@ -717,25 +722,25 @@ export interface AdminOffer {
     type: 'buy_x_get_y' | 'quantity_discount' | 'amount_discount';
     config: OfferConfig;
     status: boolean;
-    combinable_with_coupons: boolean;
+    combinableWithCoupons: boolean;
     priority: number | null;
-    usage_limit: number | null;
-    used_count: number | null;
-    starts_at: string | null;
-    ends_at: string | null;
-    created_at: string | null;
-    updated_at: string | null;
+    usageLimit: number | null;
+    usedCount: number | null;
+    startsAt: string | null;
+    endsAt: string | null;
+    createdAt: string | null;
+    updatedAt: string | null;
 }
 
 export interface OfferInput {
     name?: string;
     type?: 'buy_x_get_y' | 'quantity_discount' | 'amount_discount';
     config?: OfferConfig;
-    combinable_with_coupons?: boolean | null;
+    combinableWithCoupons?: boolean | null;
     priority?: number | null;
-    usage_limit?: number | null;
-    starts_at?: string | null;
-    ends_at?: string | null;
+    usageLimit?: number | null;
+    startsAt?: string | null;
+    endsAt?: string | null;
     status?: boolean | null;
 }
 
@@ -744,12 +749,12 @@ export type OfferConfig = BuyXGetYConfig | TieredOfferConfig;
 
 /** Narrows the products the offer counts; null is the whole catalog. */
 export type OfferScope = {
-    taxonomy_filters?: Record<string, Array<number> | null> | null;
-    taxonomy_labels?: Record<string, string | null> | null;
-    product_ids?: Array<number> | null;
-    product_labels?: Record<string, string | null> | null;
-    exclude_product_ids?: Array<number> | null;
-    exclude_product_labels?: Record<string, string | null> | null;
+    taxonomyFilters?: Record<string, Array<number> | null> | null;
+    taxonomyLabels?: Record<string, string | null> | null;
+    productIds?: Array<number> | null;
+    productLabels?: Record<string, string | null> | null;
+    excludeProductIds?: Array<number> | null;
+    excludeProductLabels?: Record<string, string | null> | null;
 } | null;
 
 export interface BuyXGetYConfig {
@@ -761,59 +766,59 @@ export interface BuyXGetYConfig {
         kind: 'items' | 'discount';
         /** Required for `items`. */
         qty?: number | null;
-        get_scope?: OfferScope;
-        value_type: 'percentage' | 'fixed';
+        getScope?: OfferScope;
+        valueType: 'percentage' | 'fixed';
         /** At most 100 for a percentage. */
         value: number;
         /** Required for `discount`. */
-        applies_to?: 'buy_items' | 'order' | null;
+        appliesTo?: 'buy_items' | 'order' | null;
     };
-    max_applications?: number | null;
+    maxApplications?: number | null;
 }
 
 export interface TieredOfferConfig {
-    /** `min_qty` for `quantity_discount`, `min_subtotal` for `amount_discount`; thresholds must differ. */
+    /** `minQty` for `quantity_discount`, `minSubtotal` for `amount_discount`; thresholds must differ. */
     tiers: Array<{
-        min_qty?: number;
-        min_subtotal?: number;
-        value_type: 'percentage' | 'fixed';
+        minQty?: number;
+        minSubtotal?: number;
+        valueType: 'percentage' | 'fixed';
         value: number;
     }>;
     /** `amount_discount` only. */
-    max_discount_amount?: number | null;
+    maxDiscountAmount?: number | null;
     scope?: OfferScope;
 }
 
 export interface AdminQuotation {
     id: number;
-    quotation_number: string;
+    quotationNumber: string;
     status: QuotationStatus;
-    enquiry_id: number | null;
-    order_id: number | null;
-    previous_quotation_id: number | null;
-    customer_id: number | null;
-    customer_name: string | null;
-    customer_email: string | null;
-    customer_phone: string | null;
-    shipping_country_code: string | null;
-    shipping_city: string | null;
-    shipping_state: string | null;
-    shipping_address_line_1: string | null;
-    shipping_address_line_2: string | null;
-    shipping_postal_code: string | null;
-    billing_different: boolean;
-    billing_name: string | null;
-    billing_phone: string | null;
-    billing_country_code: string | null;
-    billing_city: string | null;
-    billing_state: string | null;
-    billing_address_line_1: string | null;
-    billing_address_line_2: string | null;
-    billing_postal_code: string | null;
+    enquiryId: number | null;
+    orderId: number | null;
+    previousQuotationId: number | null;
+    customerId: number | null;
+    customerName: string | null;
+    customerEmail: string | null;
+    customerPhone: string | null;
+    shippingCountryCode: string | null;
+    shippingCity: string | null;
+    shippingState: string | null;
+    shippingAddressLine1: string | null;
+    shippingAddressLine2: string | null;
+    shippingPostalCode: string | null;
+    billingDifferent: boolean;
+    billingName: string | null;
+    billingPhone: string | null;
+    billingCountryCode: string | null;
+    billingCity: string | null;
+    billingState: string | null;
+    billingAddressLine1: string | null;
+    billingAddressLine2: string | null;
+    billingPostalCode: string | null;
     notes: string | null;
     currency: string | null;
     items: Array<{
-        product_id: number | null;
+        productId: number | null;
         title: string | null;
         sku: string | null;
         quantity: number;
@@ -822,11 +827,11 @@ export interface AdminQuotation {
         note: string | null;
     }>;
     subtotal: number;
-    shipping_fee: number;
+    shippingFee: number;
     tax: number;
     total: number;
     /** The moves the quotation allows now. */
-    allowed_actions: Array<
+    allowedActions: Array<
         | 'update'
         | 'send'
         | 'publish'
@@ -836,71 +841,71 @@ export interface AdminQuotation {
         | 'create_order'
         | 'cancel'
     >;
-    sent_at: string | null;
-    agreed_at: string | null;
-    cancelled_at: string | null;
-    created_at: string | null;
-    updated_at: string | null;
+    sentAt: string | null;
+    agreedAt: string | null;
+    cancelledAt: string | null;
+    createdAt: string | null;
+    updatedAt: string | null;
 }
 
-/** A shop customer (`customer_id`), or without one a `customer_name`. */
+/** A shop customer (`customerId`), or without one a `customerName`. */
 export interface QuotationInput {
-    customer_id?: number | null;
-    /** Required without `customer_id`. */
-    customer_name?: string | null;
-    customer_email?: string | null;
-    customer_phone?: string | null;
+    customerId?: number | null;
+    /** Required without `customerId`. */
+    customerName?: string | null;
+    customerEmail?: string | null;
+    customerPhone?: string | null;
     /** Replaces every line when updating. */
     items?: Array<{
         /** One of the shop's products, each once. */
-        product_id: number;
+        productId: number;
         quantity: number;
         price: number;
         note?: string | null;
     }>;
-    shipping_fee?: number;
-    shipping_country_code?: string | null;
-    shipping_city?: string | null;
-    shipping_state?: string | null;
-    shipping_address_line_1?: string | null;
-    shipping_address_line_2?: string | null;
-    shipping_postal_code?: string | null;
+    shippingFee?: number;
+    shippingCountryCode?: string | null;
+    shippingCity?: string | null;
+    shippingState?: string | null;
+    shippingAddressLine1?: string | null;
+    shippingAddressLine2?: string | null;
+    shippingPostalCode?: string | null;
     /** Unset or false bills the shipping address and ignores the billing fields. */
-    billing_different?: boolean | null;
-    billing_name?: string | null;
-    billing_phone?: string | null;
-    billing_country_code?: string | null;
-    billing_city?: string | null;
-    billing_state?: string | null;
-    billing_address_line_1?: string | null;
-    billing_address_line_2?: string | null;
-    billing_postal_code?: string | null;
+    billingDifferent?: boolean | null;
+    billingName?: string | null;
+    billingPhone?: string | null;
+    billingCountryCode?: string | null;
+    billingCity?: string | null;
+    billingState?: string | null;
+    billingAddressLine1?: string | null;
+    billingAddressLine2?: string | null;
+    billingPostalCode?: string | null;
     notes?: string | null;
     /** Rich text before the products, sanitized on save. Not returned in responses. */
     intro?: string | null;
     /** The PDF layout; empty uses the shop's default. Not returned in responses. */
-    pdf_template_id?: number | null;
+    pdfTemplateId?: number | null;
 }
 
 export interface AdminReview {
     id: number;
-    product_id: number | null;
-    customer_id: number | null;
-    order_id: number | null;
+    productId: number | null;
+    customerId: number | null;
+    orderId: number | null;
     rating: number;
     title: string | null;
     body: string | null;
-    author_name: string | null;
-    verified_buyer: boolean;
+    authorName: string | null;
+    verifiedBuyer: boolean;
     locale: string | null;
     status: ReviewStatus;
     reply: {
         body: string;
-        updated_at: string | null;
+        updatedAt: string | null;
     } | null;
-    published_at: string | null;
-    created_at: string | null;
-    updated_at: string | null;
+    publishedAt: string | null;
+    createdAt: string | null;
+    updatedAt: string | null;
 }
 
 /** An https address on the public internet. */
@@ -912,59 +917,59 @@ export interface WebhookEndpoint {
     events: Array<SubscribableWebhookEvent>;
     active: boolean;
     /** When it was turned off after 20 failed deliveries in a row. */
-    disabled_at: string | null;
-    created_at: string | null;
-    updated_at: string | null;
+    disabledAt: string | null;
+    createdAt: string | null;
+    updatedAt: string | null;
 }
 
 export interface Enquiry {
     id: number;
-    enquiry_number: string;
+    enquiryNumber: string;
     status: EnquiryStatus;
-    payment_status: PaymentStatus;
+    paymentStatus: PaymentStatus;
     revision: number | null;
-    customer_id: number | null;
-    wholesale_membership_id: number | null;
-    order_id: number | null;
-    customer_name: string | null;
-    customer_email: string | null;
-    customer_phone: string | null;
-    shipping_country_code: string | null;
-    shipping_city: string | null;
-    shipping_state: string | null;
-    shipping_address_line_1: string | null;
-    shipping_address_line_2: string | null;
-    shipping_postal_code: string | null;
+    customerId: number | null;
+    wholesaleMembershipId: number | null;
+    orderId: number | null;
+    customerName: string | null;
+    customerEmail: string | null;
+    customerPhone: string | null;
+    shippingCountryCode: string | null;
+    shippingCity: string | null;
+    shippingState: string | null;
+    shippingAddressLine1: string | null;
+    shippingAddressLine2: string | null;
+    shippingPostalCode: string | null;
     notes: string | null;
     currency: string | null;
     items: Array<{
-        product_id: number | null;
+        productId: number | null;
         title: string | null;
         sku: string | null;
-        requested_quantity: number | null;
-        requested_price: number;
-        quoted_quantity: number | null;
-        quoted_price: number | null;
+        requestedQuantity: number | null;
+        requestedPrice: number;
+        quotedQuantity: number | null;
+        quotedPrice: number | null;
         total: number;
         note: string | null;
     }>;
     subtotal: number;
-    shipping_fee: number;
+    shippingFee: number;
     tax: number;
     total: number;
-    quoted_at: string | null;
-    agreed_at: string | null;
-    completed_at: string | null;
-    cancelled_at: string | null;
-    created_at: string | null;
-    updated_at: string | null;
+    quotedAt: string | null;
+    agreedAt: string | null;
+    completedAt: string | null;
+    cancelledAt: string | null;
+    createdAt: string | null;
+    updatedAt: string | null;
 }
 
 export interface WebhookEnvelope {
     /** The event's id, also in `Storehugs-Event-Id`. */
     id: string;
     type: WebhookEvent;
-    created_at: string;
+    createdAt: string;
     data: Record<string, unknown>;
 }
 
@@ -991,20 +996,20 @@ export type CustomerWebhookPayload = WebhookEnvelope & {
 };
 
 export interface CartItemInput {
-    product_id: number;
+    productId: number;
     quantity?: number | null;
 }
 
 export interface CheckoutOptions {
     /** Path on the shop's site (Settings → Integration API) the receipt's "Continue shopping" links to. Starts with a single `/`. */
-    return_path?: string | null;
+    returnPath?: string | null;
     /** Path on the shop's site checkout's back link leads to. Starts with a single `/`. */
-    cart_path?: string | null;
+    cartPath?: string | null;
     /** The visit's UTM tags and click ids, recorded when the link is opened. */
     attribution?: {
-        utm_source?: string | null;
-        utm_medium?: string | null;
-        utm_campaign?: string | null;
+        utmSource?: string | null;
+        utmMedium?: string | null;
+        utmCampaign?: string | null;
         fbclid?: string | null;
         gclid?: string | null;
         gbraid?: string | null;
@@ -1012,7 +1017,7 @@ export interface CheckoutOptions {
         dclid?: string | null;
         msclkid?: string | null;
         ttclid?: string | null;
-        li_fat_id?: string | null;
+        liFatId?: string | null;
         twclid?: string | null;
     } | null;
 }
@@ -1032,8 +1037,8 @@ export interface OrderStatusInput {
         | 'completed'
         | 'cancelled';
     note?: string | null;
-    notify_customer?: boolean | null;
-    updated_at?: UpdatedAtGuard;
+    notifyCustomer?: boolean | null;
+    updatedAt?: UpdatedAtGuard;
 }
 
 export interface OrderShipmentInput {
@@ -1047,9 +1052,9 @@ export interface OrderShipmentInput {
         | 'babel_express'
         | 'other';
     /** Required when `carrier` is `other`. */
-    carrier_name?: string | null;
-    tracking_number: string;
-    tracking_url?: string | null;
+    carrierName?: string | null;
+    trackingNumber: string;
+    trackingUrl?: string | null;
 }
 
 export interface AdminCustomerInput {

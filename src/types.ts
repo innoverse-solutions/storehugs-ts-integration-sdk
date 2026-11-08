@@ -31,7 +31,7 @@ export type AppKeyGrant = AppTokenResponse;
 export type LengthAwarePage<T> = NumberedPageEnvelope & { data: T[] };
 
 export type AdminProductInput = ProductInput & {
-    image_mode?: 'add' | 'replace' | null;
+    imageMode?: 'add' | 'replace' | null;
 };
 export type AdminCouponInput = CouponInput;
 export type AdminOfferInput = OfferInput;
@@ -57,5 +57,5 @@ export interface QuotationActionResult {
     /** The quotation; for `revise`, the new draft. */
     data: AdminQuotation;
     /** The order made by `agree_and_order` or `create_order`. */
-    order: { id: number; order_number: string } | null;
+    order: { id: number; orderNumber: string } | null;
 }
