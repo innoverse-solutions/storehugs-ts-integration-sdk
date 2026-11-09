@@ -67,6 +67,7 @@ await admin.products.update(
 **Catalog setup:** besides products, the client reaches what products are built from.
 
 - `admin.units`: the units products are sold in (a product's `unitId`).
+- `admin.taxonomies`: the shop's taxonomies, and `terms(taxonomyId)` for one taxonomy's terms (a product's `taxonomyTermIds`).
 
 **Apps** get an Admin key, not an OAuth token:
 

@@ -1,6 +1,7 @@
 import type {
     AdminProduct,
     AdminQuotation,
+    AdminTaxonomyTerm,
     AppTokenResponse,
     CouponInput,
     InventoryItemInput,
@@ -11,6 +12,7 @@ import type {
     QuotationInput,
     ShopperTokenResponse,
     StorefrontCustomer,
+    TaxonomyTermInput,
     UnitInput,
 } from './schemas.ts';
 
@@ -39,6 +41,17 @@ export type AdminOfferInput = OfferInput;
 export type AdminQuotationInput = QuotationInput;
 export type InventoryItem = InventoryItemInput;
 export type AdminUnitInput = UnitInput & { name: string };
+export type AdminTaxonomyTermInput = TaxonomyTermInput & { title: string };
+export type AdminTaxonomyTermChanges = Partial<AdminTaxonomyTermInput> & {
+    /** Removes the term's image. */
+    removeImage?: boolean | null;
+};
+
+/** A term saved, with the reason an image couldn't be stored. */
+export interface TaxonomyTermWriteResult {
+    data: AdminTaxonomyTerm;
+    warnings: string[];
+}
 
 /** A product saved, with the images that couldn't be stored. */
 export interface ProductWriteResult {

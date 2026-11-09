@@ -256,3 +256,28 @@ test('units are listed by search and changed by id', async () => {
     assert.deepEqual(requests[1]?.body, { translations: { ar: 'لتر' } });
     assert.equal(unit.id, 4);
 });
+
+test("a taxonomy's terms are reached under its id", async () => {
+    const { fetch, requests } = fakeFetch(
+        json({ data: [{ id: 2, slug: 'categories', terms: 5 }] }),
+        json({ data: { id: 30, parentId: null }, warnings: [] }),
+        new Response(null, { status: 204 }),
+    );
+    const admin = new AdminClient({ apiKey: 'sa_live_x', fetch });
+
+    const [categories] = await admin.taxonomies.list();
+    const terms = admin.taxonomies.terms(categories!.id);
+    const result = await terms.update(30, {
+        parentId: null,
+        removeImage: true,
+    });
+    await terms.delete(30);
+
+    assert.equal(
+        requests[1]?.url,
+        'https://my.storehugs.com/api/admin/v1/taxonomies/2/terms/30',
+    );
+    assert.deepEqual(requests[1]?.body, { parentId: null, removeImage: true });
+    assert.deepEqual(result.warnings, []);
+    assert.equal(requests[2]?.method, 'DELETE');
+});

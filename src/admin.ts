@@ -13,6 +13,10 @@ import type {
     AdminQuotationInput,
     AdminReview,
     AdminShop,
+    AdminTaxonomy,
+    AdminTaxonomyTerm,
+    AdminTaxonomyTermChanges,
+    AdminTaxonomyTermInput,
     AdminUnit,
     AdminUnitInput,
     ApiKey,
@@ -29,6 +33,7 @@ import type {
     QuotationAction,
     QuotationActionResult,
     QuotationSendInput,
+    TaxonomyTermWriteResult,
     WebhookEndpoint,
     WebhookEndpointInput,
 } from './types.ts';
@@ -82,6 +87,7 @@ export class AdminClient {
     readonly quotations;
     readonly webhooks;
     readonly units;
+    readonly taxonomies;
 
     constructor(options: AdminClientOptions) {
         this.transport = new Transport({
@@ -300,6 +306,51 @@ export class AdminClient {
                 '/units',
             ),
             ...this.crud<AdminUnit, AdminUnitInput>('/units'),
+        };
+
+        this.taxonomies = {
+            /** The shop's taxonomies (Category, Brand…), in its order, with how many terms each has. Made in the panel. */
+            list: () => this.unwrap<AdminTaxonomy[]>('GET', '/taxonomies'),
+            /** One taxonomy's terms, by the taxonomy's id. */
+            terms: (taxonomyId: number) => {
+                const path = `/taxonomies/${taxonomyId}/terms`;
+
+                return {
+                    ...this.listing<
+                        AdminTaxonomyTerm,
+                        ListQuery & {
+                            search?: string;
+                            /** Only the terms directly under this term; `0` for the top level. */
+                            parentId?: number;
+                        }
+                    >(path),
+                    get: (id: number) =>
+                        this.unwrap<AdminTaxonomyTerm>('GET', `${path}/${id}`),
+                    /** An image that couldn't be stored is skipped and explained in `warnings`. */
+                    create: (
+                        input: AdminTaxonomyTermInput,
+                        options?: RequestOptions,
+                    ) =>
+                        t.request<TaxonomyTermWriteResult>('POST', path, {
+                            ...options,
+                            body: input,
+                        }),
+                    /** Changes only the fields sent; `parentId: null` moves it to the top level. The slug stays. */
+                    update: (
+                        id: number,
+                        changes: AdminTaxonomyTermChanges,
+                        options: UpdateOptions = {},
+                    ) =>
+                        t.request<TaxonomyTermWriteResult>(
+                            'PATCH',
+                            `${path}/${id}`,
+                            this.update(changes, options),
+                        ),
+                    /** Its products leave it and its children move to the top level. */
+                    delete: (id: number) =>
+                        t.request<void>('DELETE', `${path}/${id}`),
+                };
+            },
         };
     }
 

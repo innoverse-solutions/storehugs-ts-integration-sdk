@@ -3,6 +3,7 @@
 ## Unreleased
 
 - `admin.units`: list, read, create, update and delete the units products are sold in, such as piece or kilogram (`list()` and `all()` take `search`). A unit products still use can't be deleted (422).
+- `admin.taxonomies`: `list()` the shop's taxonomies (`AdminTaxonomy`), and `terms(taxonomyId)` to list, read, create, update and delete one taxonomy's terms (`AdminTaxonomyTerm`; lists take `search` and `parentId`). Creating and updating answer `{ data, warnings }`, as products do, when an image can't be stored; `removeImage` removes it.
 - Types regenerated from the current spec. `AdminProduct` gains `relatedProductIds` and `recommendedProductIds` (the product page's You May Also Like picks), which `AdminProductInput` also takes; descriptions follow the reference's new wording.
 
 ## 0.2.0 — 2026-11-08
