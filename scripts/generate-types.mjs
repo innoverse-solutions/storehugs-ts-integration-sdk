@@ -124,6 +124,11 @@ function ts(schema, indent = 0) {
     }
 
     if (types.length === 0) {
+        if (nullable && !('properties' in schema)) {
+            // `{ type: "null" }`, as in `oneOf: [X, { type: "null" }]`.
+            return 'null';
+        }
+
         if ('properties' in schema || 'required' in schema) {
             types = ['object'];
         } else {
@@ -158,6 +163,8 @@ function object(schema, indent) {
     const additional = schema.additionalProperties;
     const additionalIsSchema =
         typeof additional === 'object' && additional !== null;
+    // `additionalProperties: true` beside named properties: other keys are allowed too.
+    const additionalIsOpen = additional === true || additionalIsSchema;
 
     if (Object.keys(properties).length === 0) {
         if (additionalIsSchema) {
@@ -188,7 +195,7 @@ function object(schema, indent) {
         );
     }
 
-    if (additionalIsSchema) {
+    if (additionalIsOpen) {
         lines.push(`${pad}[key: string]: unknown;`);
     }
 

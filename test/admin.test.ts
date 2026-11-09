@@ -347,3 +347,36 @@ test('specification templates are listed by source and read with their propertie
     );
     assert.equal(template.ungroupedProperties[0]?.id, 1);
 });
+
+test("a variant may set any product field, and a property's unit reads as text by language", async () => {
+    const { fetch, requests } = fakeFetch(
+        json({ data: { id: 6, variants: [] }, warnings: [] }, 201),
+        json({
+            data: {
+                id: 9,
+                groups: [],
+                ungroupedProperties: [{ id: 1, unit: { en: 'cm' } }],
+            },
+        }),
+    );
+    const admin = new AdminClient({ apiKey: 'sa_live_x', fetch });
+
+    await admin.variableProducts.create({
+        title: 'Shirt',
+        variants: [
+            { options: [{ name: 'Size', value: 'M' }], weight: 2 },
+            { options: [{ name: 'Size', value: 'L' }], title: 'Shirt — Large' },
+        ],
+    });
+    const template = await admin.specTemplates.get(9);
+    const unit = template.ungroupedProperties[0]?.unit;
+
+    assert.equal(
+        (requests[0]?.body as { variants: Array<{ weight?: number }> })
+            .variants[0]?.weight,
+        2,
+    );
+    // An empty text comes back as `[]`; anything else is text by language.
+    assert.ok(unit && !Array.isArray(unit));
+    assert.equal(unit.en, 'cm');
+});

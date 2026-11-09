@@ -33,8 +33,8 @@ export type UpdatedAtGuard = string | null;
 
 export interface CursorPageEnvelope {
     links: {
-        first: unknown | null;
-        last: unknown | null;
+        first: null;
+        last: null;
         prev: string | null;
         next: string | null;
     };
@@ -415,7 +415,7 @@ export interface Order {
     id: number;
     orderNumber: string;
     status: OrderStatus;
-    paymentStatus: PaymentStatus | unknown | null;
+    paymentStatus: PaymentStatus | null;
     paymentMethod: string | null;
     /** checkout, whatsapp, quotation or enquiry. */
     source: string;
@@ -824,6 +824,7 @@ export interface VariantInput {
     specs?: Record<string, unknown> | null;
     /** Terms for this variant only, added to the shared ones. */
     taxonomyTermIds?: Array<number> | null;
+    [key: string]: unknown;
 }
 
 export interface AdminSpecTemplate {
@@ -858,7 +859,7 @@ export interface AdminSpecProperty {
     /** What its value is (see the endpoint's description). */
     type: 'text' | 'number' | 'boolean' | 'select';
     /** The unit a number is in, e.g. "cm", by language; null when it has none. */
-    unit: LocalizedText | unknown | null;
+    unit: LocalizedText | null;
     /** Whether a product with this template must have a value for it. */
     required: boolean;
     /** For a `select` only, the choices; send the `key`. */
