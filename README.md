@@ -69,6 +69,7 @@ await admin.products.update(
 - `admin.units`: the units products are sold in (a product's `unitId`).
 - `admin.taxonomies`: the shop's taxonomies, and `terms(taxonomyId)` for one taxonomy's terms (a product's `taxonomyTermIds`).
 - `admin.variantOptions`: the options variable products are sold in, such as Size, and their values. Reuse these names so the shop keeps one of each.
+- `admin.variableProducts`: products sold in those options, created with their variants or given more.
 
 **Apps** get an Admin key, not an OAuth token:
 

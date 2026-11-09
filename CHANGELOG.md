@@ -5,6 +5,7 @@
 - `admin.units`: list, read, create, update and delete the units products are sold in, such as piece or kilogram (`list()` and `all()` take `search`). A unit products still use can't be deleted (422).
 - `admin.taxonomies`: `list()` the shop's taxonomies (`AdminTaxonomy`), and `terms(taxonomyId)` to list, read, create, update and delete one taxonomy's terms (`AdminTaxonomyTerm`; lists take `search` and `parentId`). Creating and updating answer `{ data, warnings }`, as products do, when an image can't be stored; `removeImage` removes it.
 - `admin.variantOptions`: `list()` the options variable products are sold in with their values (`AdminVariantOption`), `create()` and `update()` an option (name, translations, `displayMode`), and `createValue()` and `updateValue()` its values (name, translations, swatch `color`). Each answers with the whole option. Variable products need a plan that includes them (else 403 `plan_required`).
+- `admin.variableProducts`: list (`search`), read, `create()` with 2 to 50 variants, and `addVariants()` to an existing one (`AdminVariableProduct`). Each variant's `options` is a list of `{ name, value }`, and writes answer `{ data, warnings }`. Each variant is a product of its own, changed with `admin.products`.
 - Types regenerated from the current spec. `AdminProduct` gains `relatedProductIds` and `recommendedProductIds` (the product page's You May Also Like picks), which `AdminProductInput` also takes; descriptions follow the reference's new wording.
 
 ## 0.2.0 — 2026-11-08

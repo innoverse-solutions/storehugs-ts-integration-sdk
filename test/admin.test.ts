@@ -300,3 +300,24 @@ test("a variant option's value is changed under the option", async () => {
     assert.deepEqual(requests[0]?.body, { color: '#ff0000' });
     assert.equal(option.id, 3);
 });
+
+test('variants are added to a variable product with their options as a list', async () => {
+    const { fetch, requests } = fakeFetch(
+        json({ data: { id: 6, variants: [] }, warnings: [] }, 201),
+    );
+    const admin = new AdminClient({ apiKey: 'sa_live_x', fetch });
+
+    const result = await admin.variableProducts.addVariants(6, {
+        variants: [{ options: [{ name: 'Size', value: 'XL' }], price: 20 }],
+    });
+
+    assert.equal(requests[0]?.method, 'POST');
+    assert.equal(
+        requests[0]?.url,
+        'https://my.storehugs.com/api/admin/v1/variable-products/6/variants',
+    );
+    assert.deepEqual(requests[0]?.body, {
+        variants: [{ options: [{ name: 'Size', value: 'XL' }], price: 20 }],
+    });
+    assert.equal(result.data.id, 6);
+});

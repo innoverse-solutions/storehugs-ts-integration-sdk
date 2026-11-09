@@ -19,9 +19,12 @@ import type {
     AdminTaxonomyTermInput,
     AdminUnit,
     AdminUnitInput,
+    AdminVariableProduct,
+    AdminVariableProductInput,
     AdminVariantOption,
     AdminVariantOptionInput,
     AdminVariantValueInput,
+    AdminVariantsInput,
     ApiKey,
     ApiKeyInput,
     AppKeyGrant,
@@ -37,6 +40,7 @@ import type {
     QuotationActionResult,
     QuotationSendInput,
     TaxonomyTermWriteResult,
+    VariableProductWriteResult,
     WebhookEndpoint,
     WebhookEndpointInput,
 } from './types.ts';
@@ -92,6 +96,7 @@ export class AdminClient {
     readonly units;
     readonly taxonomies;
     readonly variantOptions;
+    readonly variableProducts;
 
     constructor(options: AdminClientOptions) {
         this.transport = new Transport({
@@ -404,6 +409,43 @@ export class AdminClient {
                     'PATCH',
                     `/variant-options/${optionId}/values/${valueId}`,
                     this.update(changes, options),
+                ),
+        };
+
+        /**
+         * Products sold in options such as size or colour. Each variant is a
+         * product of its own: change it with `products`, by its `productId`.
+         */
+        this.variableProducts = {
+            ...this.listing<
+                AdminVariableProduct,
+                ListQuery & { search?: string }
+            >('/variable-products'),
+            get: (id: number) =>
+                this.unwrap<AdminVariableProduct>(
+                    'GET',
+                    `/variable-products/${id}`,
+                ),
+            /** 2 to 50 variants; option names and values reuse the shop's own. Search first: add variants to one that exists. */
+            create: (
+                input: AdminVariableProductInput,
+                options?: RequestOptions,
+            ) =>
+                t.request<VariableProductWriteResult>(
+                    'POST',
+                    '/variable-products',
+                    { ...options, body: input },
+                ),
+            /** 1 to 50 variants, each with a value for every option the product has. */
+            addVariants: (
+                id: number,
+                input: AdminVariantsInput,
+                options?: RequestOptions,
+            ) =>
+                t.request<VariableProductWriteResult>(
+                    'POST',
+                    `/variable-products/${id}/variants`,
+                    { ...options, body: input },
                 ),
         };
     }

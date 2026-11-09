@@ -2,6 +2,7 @@ import type {
     AdminProduct,
     AdminQuotation,
     AdminTaxonomyTerm,
+    AdminVariableProduct,
     AppTokenResponse,
     CouponInput,
     InventoryItemInput,
@@ -14,6 +15,8 @@ import type {
     StorefrontCustomer,
     TaxonomyTermInput,
     UnitInput,
+    VariableProductInput,
+    VariantInput,
     VariantOptionInput,
     VariantValueInput,
 } from './schemas.ts';
@@ -45,6 +48,13 @@ export type InventoryItem = InventoryItemInput;
 export type AdminUnitInput = UnitInput & { name: string };
 export type AdminVariantOptionInput = VariantOptionInput & { name: string };
 export type AdminVariantValueInput = VariantValueInput & { name: string };
+export type AdminVariableProductInput = VariableProductInput & {
+    title: string;
+    variants: VariantInput[];
+};
+export type AdminVariantsInput = VariableProductInput & {
+    variants: VariantInput[];
+};
 export type AdminTaxonomyTermInput = TaxonomyTermInput & { title: string };
 export type AdminTaxonomyTermChanges = Partial<AdminTaxonomyTermInput> & {
     /** Removes the term's image. */
@@ -77,4 +87,10 @@ export interface QuotationActionResult {
     data: AdminQuotation;
     /** The order made by `agree_and_order` or `create_order`. */
     order: { id: number; orderNumber: string } | null;
+}
+
+/** A variable product saved, with the images that couldn't be stored. */
+export interface VariableProductWriteResult {
+    data: AdminVariableProduct;
+    warnings: string[];
 }
