@@ -67,6 +67,26 @@ export interface TaxonomyTermWriteResult {
     warnings: string[];
 }
 
+/** The kinds of product Store Hugs publishes specification templates for. */
+export type SpecTemplateCategory =
+    | 'electronics'
+    | 'appliances'
+    | 'fashion'
+    | 'shoes_bags'
+    | 'jewelry'
+    | 'beauty'
+    | 'health'
+    | 'home'
+    | 'tools_garden'
+    | 'baby'
+    | 'toys'
+    | 'sports'
+    | 'automotive'
+    | 'pets'
+    | 'office'
+    | 'grocery'
+    | 'media';
+
 /** A product saved, with the images that couldn't be stored. */
 export interface ProductWriteResult {
     data: AdminProduct;

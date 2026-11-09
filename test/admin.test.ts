@@ -321,3 +321,29 @@ test('variants are added to a variable product with their options as a list', as
     });
     assert.equal(result.data.id, 6);
 });
+
+test('specification templates are listed by source and read with their properties', async () => {
+    const { fetch, requests } = fakeFetch(
+        json({ data: [], links: {}, meta: { nextCursor: null } }),
+        json({
+            data: { id: 9, groups: [], ungroupedProperties: [{ id: 1 }] },
+        }),
+    );
+    const admin = new AdminClient({ apiKey: 'sa_live_x', fetch });
+
+    await admin.specTemplates.list({
+        source: 'public',
+        category: 'electronics',
+    });
+    const template = await admin.specTemplates.get(9);
+
+    assert.equal(
+        requests[0]?.url,
+        'https://my.storehugs.com/api/admin/v1/spec-templates?source=public&category=electronics',
+    );
+    assert.equal(
+        requests[1]?.url,
+        'https://my.storehugs.com/api/admin/v1/spec-templates/9',
+    );
+    assert.equal(template.ungroupedProperties[0]?.id, 1);
+});

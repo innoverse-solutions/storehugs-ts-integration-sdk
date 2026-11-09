@@ -13,6 +13,8 @@ import type {
     AdminQuotationInput,
     AdminReview,
     AdminShop,
+    AdminSpecTemplate,
+    AdminSpecTemplateDetail,
     AdminTaxonomy,
     AdminTaxonomyTerm,
     AdminTaxonomyTermChanges,
@@ -39,6 +41,7 @@ import type {
     QuotationAction,
     QuotationActionResult,
     QuotationSendInput,
+    SpecTemplateCategory,
     TaxonomyTermWriteResult,
     VariableProductWriteResult,
     WebhookEndpoint,
@@ -97,6 +100,7 @@ export class AdminClient {
     readonly taxonomies;
     readonly variantOptions;
     readonly variableProducts;
+    readonly specTemplates;
 
     constructor(options: AdminClientOptions) {
         this.transport = new Transport({
@@ -446,6 +450,30 @@ export class AdminClient {
                     'POST',
                     `/variable-products/${id}/variants`,
                     { ...options, body: input },
+                ),
+        };
+
+        /**
+         * The specification templates products can use (a plan that includes
+         * them, else 403 `plan_required`). Give a product one with
+         * `specTemplateId`, and its values in `specs` by property id.
+         */
+        this.specTemplates = {
+            ...this.listing<
+                AdminSpecTemplate,
+                ListQuery & {
+                    search?: string;
+                    /** The shop's own (`mine`, the default) or the ones Store Hugs publishes (`public`). */
+                    source?: 'mine' | 'public';
+                    /** Narrows the published ones to one kind of product. */
+                    category?: SpecTemplateCategory;
+                }
+            >('/spec-templates'),
+            /** With its properties, in their groups and order. */
+            get: (id: number) =>
+                this.unwrap<AdminSpecTemplateDetail>(
+                    'GET',
+                    `/spec-templates/${id}`,
                 ),
         };
     }
