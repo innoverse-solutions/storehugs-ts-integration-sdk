@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Types regenerated from the current spec. `AdminProduct` gains `relatedProductIds` and `recommendedProductIds` (the product page's You May Also Like picks), which `AdminProductInput` also takes; descriptions follow the reference's new wording.
+
 ## 0.2.0 — 2026-11-08
 
 - **Breaking:** `storefront.categories()` is gone, with the API's `/categories`. `storefront.taxonomies.list()` lists the shop's classifications (`Taxonomy`, without terms), and `storefront.taxonomies.terms(slug)` reads one classification's terms as a tree (`TaxonomyTerm`). `CategoryType` and `CategoryTerm` are removed.

@@ -568,6 +568,10 @@ export interface AdminProduct {
     width: number | null;
     height: number | null;
     taxonomyTermIds: Array<number>;
+    /** The products shown as applicable products on the product page, in order. */
+    relatedProductIds: Array<number>;
+    /** The merchant's picks for the product page's You May Also Like section, in order. Without picks, the page shows the closest matches. */
+    recommendedProductIds: Array<number>;
     specTemplateId: number | null;
     variableProductId: number | null;
     thumbnail: string | null;
@@ -588,6 +592,7 @@ export interface ProductInput {
     /** In the default language. HTML is kept; plain text becomes paragraphs. */
     description?: string | null;
     descriptionTranslations?: Record<string, string | null> | null;
+    /** Category, brand, tag and other term ids, from `GET /api/admin/v1/taxonomies/{taxonomy}/terms`. */
     taxonomyTermIds?: Array<number> | null;
     /** The first is the thumbnail. */
     images?: Array<{
@@ -610,6 +615,7 @@ export interface ProductInput {
     stockQuantity?: number | null;
     stockStatus?: 'in_stock' | 'out_of_stock' | null;
     lowStockAmount?: number | null;
+    /** The unit it is sold in, from `GET /api/admin/v1/units`. */
     unitId?: number | null;
     taxClassId?: number | null;
     type?: 'physical' | 'digital';
@@ -625,11 +631,14 @@ export interface ProductInput {
     length?: number | null;
     width?: number | null;
     height?: number | null;
-    /** Plans with specification templates only. */
+    /** Plans with specification templates only. From `GET /api/admin/v1/spec-templates`. */
     specTemplateId?: number | null;
-    /** Specification values by property id; a text property's string is its default-language value. */
+    /** Specification values by property id, as `GET /api/admin/v1/spec-templates/{template}` lists the properties; a text property's string is its default-language value. */
     specs?: Record<string, unknown> | null;
+    /** The shop's own products shown as applicable products on the product page, in order; replaces the current list. */
     relatedProductIds?: Array<number> | null;
+    /** Up to 8 of the shop's own products for the product page's You May Also Like section, in order, shown in place of the closest matches; replaces the current list. */
+    recommendedProductIds?: Array<number> | null;
     /** B2B plans only. */
     wholesalePrices?: Array<{
         wholesaleMembershipId: number;
@@ -672,6 +681,207 @@ export interface AdminCustomer {
     wholesaleMembershipId: number | null;
     createdAt: string | null;
     updatedAt: string | null;
+}
+
+export interface AdminTaxonomy {
+    id: number;
+    name: LocalizedText;
+    slug: string;
+    /** Whether a product takes several of its terms (tags) or one (a brand). */
+    multipleTermsPerProduct: boolean;
+    /** Whether its terms nest under each other (categories and sub-categories). */
+    nested: boolean;
+    terms: number;
+}
+
+export interface AdminTaxonomyTerm {
+    id: number;
+    taxonomyId: number;
+    title: LocalizedText;
+    slug: string;
+    description: LocalizedText;
+    parentId: number | null;
+    sortOrder: number;
+    image: string | null;
+    createdAt: string | null;
+    updatedAt: string | null;
+}
+
+export interface TaxonomyTermInput {
+    /** The title in the shop's default language. */
+    title?: string;
+    /** The title in the shop's other languages, by language code. */
+    translations?: Record<string, string | null> | null;
+    /** Plain text, in the shop's default language. */
+    description?: string | null;
+    /** The description in the shop's other languages, by language code. An empty string removes that language. */
+    descriptionTranslations?: Record<string, string | null> | null;
+    /** A term of the same taxonomy to nest it under. */
+    parentId?: number | null;
+    /** The term's image, e.g. a category picture, cropped to a square. */
+    image?: {
+        /** An https URL. Required without `data`. */
+        url?: string | null;
+        /** The image in base64, at most 5 MB. */
+        data?: string | null;
+    } | null;
+}
+
+export interface AdminVariableProduct {
+    id: number;
+    name: string;
+    /** The options its variants are sold in, in order. */
+    options: Array<{
+        id: number;
+        name: LocalizedText;
+    }>;
+    variants: Array<{
+        /** The variant's product, read and changed through `/api/admin/v1/products/{product}`. */
+        productId: number;
+        title: LocalizedText;
+        sku: string | null;
+        status: boolean;
+        options: Array<{
+            optionId: number;
+            valueId: number;
+            value: LocalizedText;
+        }>;
+    }>;
+    createdAt: string | null;
+    updatedAt: string | null;
+}
+
+export interface AdminVariantOption {
+    id: number;
+    name: LocalizedText;
+    /** How the product page shows its values. */
+    displayMode: 'text' | 'color' | 'image';
+    values: Array<{
+        id: number;
+        name: LocalizedText;
+        color: string | null;
+    }>;
+}
+
+export interface VariantOptionInput {
+    /** The name in the shop's default language, e.g. "Length". */
+    name?: string;
+    /** The name in the shop's other languages, by language code. An empty string removes that language. */
+    translations?: Record<string, string | null> | null;
+    /** How the product page shows the values. `text` (the default) shows buttons with each name, `color` shows circles filled with each value's color, and `image` shows the photo of the variant sold in each value. */
+    displayMode?: 'text' | 'color' | 'image';
+}
+
+export interface VariantValueInput {
+    /** The name in the shop's default language, e.g. "5M". */
+    name?: string;
+    /** The name in the shop's other languages, by language code. An empty string removes that language. */
+    translations?: Record<string, string | null> | null;
+    /** The swatch color as `#rrggbb`, shown when the option's `displayMode` is `color`. An empty string removes it. */
+    color?: string | null;
+}
+
+/** The fields every variant shares (any product field), and the variants. */
+export type VariableProductInput = ProductInput & {
+    /** The product's title in the default language; each variant is titled "Title — M / Red". */
+    title?: string;
+    /** Option names and values in the shop's other languages. New options get them; existing ones gain the languages they lack. */
+    optionTranslations?: Array<{
+        /** The name or value as given in `options`, e.g. "Size" or "Red". */
+        name: string;
+        /** By language code, e.g. {"ar": "أحمر"}. */
+        translations: Record<string, string | null>;
+    }> | null;
+    /** Each a distinct combination of option values. */
+    variants?: Array<VariantInput>;
+};
+
+/** One variant, which becomes a product of its own. Only `options` is required. The fields listed here are the ones a variant usually sets. A variant can also send any other product field (see `POST /api/admin/v1/products`); it then replaces the shared value for this variant only. Two fields combine with the shared value instead of replacing it: `specs` (this variant's values win, property by property) and `taxonomyTermIds` (added to the shared terms). */
+export interface VariantInput {
+    /** Every variant names the same options, e.g. [{"name": "Size", "value": "M"}, {"name": "Colour", "value": "Red"}]. */
+    options: Array<{
+        name: string;
+        value: string;
+    }>;
+    sku?: string | null;
+    partNumber?: string | null;
+    price?: number | null;
+    salePrice?: number | null;
+    manageStock?: boolean | null;
+    stockQuantity?: number | null;
+    stockStatus?: 'in_stock' | 'out_of_stock' | null;
+    lowStockAmount?: number | null;
+    /** Published. Defaults to the shared value, else false (hidden). */
+    status?: boolean;
+    /** This variant's own images, the first its thumbnail; without them it gets the shared images. */
+    images?: Array<{
+        /** An https URL. Required without `data`. */
+        url?: string | null;
+        /** The image in base64, at most 5 MB. */
+        data?: string | null;
+    }> | null;
+    /** This variant's specification values by property id, over the shared ones (e.g. its colour or capacity). */
+    specs?: Record<string, unknown> | null;
+    /** Terms for this variant only, added to the shared ones. */
+    taxonomyTermIds?: Array<number> | null;
+}
+
+export interface AdminSpecTemplate {
+    id: number;
+    name: LocalizedText;
+    description: LocalizedText;
+    /** The shop's own template, or one Store Hugs publishes. */
+    source: 'mine' | 'public';
+    /** The kind of product a published template is for. */
+    category: string | null;
+    /** How many specification properties it has. */
+    properties: number;
+    createdAt: string | null;
+    updatedAt: string | null;
+}
+
+export type AdminSpecTemplateDetail = AdminSpecTemplate & {
+    /** The template's groups of properties, in order. */
+    groups: Array<{
+        id: number;
+        name: LocalizedText;
+        properties: Array<AdminSpecProperty>;
+    }>;
+    /** The properties that are in no group, in order. */
+    ungroupedProperties: Array<AdminSpecProperty>;
+};
+
+export interface AdminSpecProperty {
+    /** The key of its value in a product's `specs`. */
+    id: number;
+    name: LocalizedText;
+    /** What its value is (see the endpoint's description). */
+    type: 'text' | 'number' | 'boolean' | 'select';
+    /** The unit a number is in, e.g. "cm", by language; null when it has none. */
+    unit: LocalizedText | unknown | null;
+    /** Whether a product with this template must have a value for it. */
+    required: boolean;
+    /** For a `select` only, the choices; send the `key`. */
+    options: Array<{
+        key: string;
+        label: LocalizedText;
+    }> | null;
+}
+
+export interface AdminUnit {
+    id: number;
+    name: LocalizedText;
+    /** How many of the shop's products are sold in it. */
+    products: number;
+    createdAt: string | null;
+    updatedAt: string | null;
+}
+
+export interface UnitInput {
+    /** The name in the shop's default language. */
+    name?: string;
+    /** The name in the shop's other languages, by language code. An empty string removes that language. */
+    translations?: Record<string, string | null> | null;
 }
 
 export interface AdminCoupon {
