@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0 — 2026-11-09
 
 - `admin.units`: list, read, create, update and delete the units products are sold in, such as piece or kilogram (`list()` and `all()` take `search`). A unit products still use can't be deleted (422).
 - `admin.taxonomies`: `list()` the shop's taxonomies (`AdminTaxonomy`), and `terms(taxonomyId)` to list, read, create, update and delete one taxonomy's terms (`AdminTaxonomyTerm`; lists take `search` and `parentId`). Creating and updating answer `{ data, warnings }`, as products do: `warnings` says why an image couldn't be stored, and is empty otherwise. `removeImage` removes the image.
