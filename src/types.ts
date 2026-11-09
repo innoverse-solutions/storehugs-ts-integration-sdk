@@ -11,6 +11,7 @@ import type {
     QuotationInput,
     ShopperTokenResponse,
     StorefrontCustomer,
+    UnitInput,
 } from './schemas.ts';
 
 export type * from './schemas.ts';
@@ -37,6 +38,7 @@ export type AdminCouponInput = CouponInput;
 export type AdminOfferInput = OfferInput;
 export type AdminQuotationInput = QuotationInput;
 export type InventoryItem = InventoryItemInput;
+export type AdminUnitInput = UnitInput & { name: string };
 
 /** A product saved, with the images that couldn't be stored. */
 export interface ProductWriteResult {

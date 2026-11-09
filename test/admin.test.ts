@@ -229,3 +229,30 @@ test('another 409 is thrown at once', async () => {
     );
     assert.equal(requests.length, 1);
 });
+
+test('units are listed by search and changed by id', async () => {
+    const { fetch, requests } = fakeFetch(
+        json({ data: [{ id: 4 }], links: {}, meta: { nextCursor: null } }),
+        json({ data: { id: 4, name: { en: 'Litre' } } }),
+    );
+    const admin = new AdminClient({ apiKey: 'sa_live_x', fetch });
+
+    await admin.units.list({ search: 'lit' });
+    const unit = await admin.units.update(
+        4,
+        { translations: { ar: 'لتر' } },
+        { unmodifiedSince: '2026-11-08T10:00:00Z' },
+    );
+
+    assert.equal(
+        requests[0]?.url,
+        'https://my.storehugs.com/api/admin/v1/units?search=lit',
+    );
+    assert.equal(requests[1]?.method, 'PATCH');
+    assert.equal(
+        requests[1]?.url,
+        'https://my.storehugs.com/api/admin/v1/units/4',
+    );
+    assert.deepEqual(requests[1]?.body, { translations: { ar: 'لتر' } });
+    assert.equal(unit.id, 4);
+});

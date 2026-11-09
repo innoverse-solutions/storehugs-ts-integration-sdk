@@ -13,6 +13,8 @@ import type {
     AdminQuotationInput,
     AdminReview,
     AdminShop,
+    AdminUnit,
+    AdminUnitInput,
     ApiKey,
     ApiKeyInput,
     AppKeyGrant,
@@ -79,6 +81,7 @@ export class AdminClient {
     readonly reviews;
     readonly quotations;
     readonly webhooks;
+    readonly units;
 
     constructor(options: AdminClientOptions) {
         this.transport = new Transport({
@@ -289,6 +292,14 @@ export class AdminClient {
                     ...options,
                     body: input,
                 }),
+        };
+
+        /** The units products are sold in (a product's `unitId`). Only a unit no product uses can be deleted. */
+        this.units = {
+            ...this.listing<AdminUnit, ListQuery & { search?: string }>(
+                '/units',
+            ),
+            ...this.crud<AdminUnit, AdminUnitInput>('/units'),
         };
     }
 
