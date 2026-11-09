@@ -281,3 +281,22 @@ test("a taxonomy's terms are reached under its id", async () => {
     assert.deepEqual(result.warnings, []);
     assert.equal(requests[2]?.method, 'DELETE');
 });
+
+test("a variant option's value is changed under the option", async () => {
+    const { fetch, requests } = fakeFetch(
+        json({ data: { id: 3, displayMode: 'color', values: [] } }),
+    );
+    const admin = new AdminClient({ apiKey: 'sa_live_x', fetch });
+
+    const option = await admin.variantOptions.updateValue(3, 11, {
+        color: '#ff0000',
+    });
+
+    assert.equal(requests[0]?.method, 'PATCH');
+    assert.equal(
+        requests[0]?.url,
+        'https://my.storehugs.com/api/admin/v1/variant-options/3/values/11',
+    );
+    assert.deepEqual(requests[0]?.body, { color: '#ff0000' });
+    assert.equal(option.id, 3);
+});

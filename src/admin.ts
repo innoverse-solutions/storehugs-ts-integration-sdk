@@ -19,6 +19,9 @@ import type {
     AdminTaxonomyTermInput,
     AdminUnit,
     AdminUnitInput,
+    AdminVariantOption,
+    AdminVariantOptionInput,
+    AdminVariantValueInput,
     ApiKey,
     ApiKeyInput,
     AppKeyGrant,
@@ -88,6 +91,7 @@ export class AdminClient {
     readonly webhooks;
     readonly units;
     readonly taxonomies;
+    readonly variantOptions;
 
     constructor(options: AdminClientOptions) {
         this.transport = new Transport({
@@ -351,6 +355,56 @@ export class AdminClient {
                         t.request<void>('DELETE', `${path}/${id}`),
                 };
             },
+        };
+
+        /** The options variable products are sold in (Size, Colour…) and their values. Each call answers with the whole option. */
+        this.variantOptions = {
+            /** Every option with its values; not paginated. */
+            list: () =>
+                this.unwrap<AdminVariantOption[]>('GET', '/variant-options'),
+            /** A name the shop already has, in any language, is refused. */
+            create: (
+                input: AdminVariantOptionInput,
+                options?: RequestOptions,
+            ) =>
+                this.unwrap<AdminVariantOption>('POST', '/variant-options', {
+                    ...options,
+                    body: input,
+                }),
+            /** Changes only the fields sent. */
+            update: (
+                id: number,
+                changes: Partial<AdminVariantOptionInput>,
+                options: UpdateOptions = {},
+            ) =>
+                this.unwrap<AdminVariantOption>(
+                    'PATCH',
+                    `/variant-options/${id}`,
+                    this.update(changes, options),
+                ),
+            /** Adds a value (e.g. 5M to Length); a name the option already has is refused. */
+            createValue: (
+                optionId: number,
+                input: AdminVariantValueInput,
+                options?: RequestOptions,
+            ) =>
+                this.unwrap<AdminVariantOption>(
+                    'POST',
+                    `/variant-options/${optionId}/values`,
+                    { ...options, body: input },
+                ),
+            /** Changes only the fields sent; an empty `color` removes the swatch. */
+            updateValue: (
+                optionId: number,
+                valueId: number,
+                changes: Partial<AdminVariantValueInput>,
+                options: UpdateOptions = {},
+            ) =>
+                this.unwrap<AdminVariantOption>(
+                    'PATCH',
+                    `/variant-options/${optionId}/values/${valueId}`,
+                    this.update(changes, options),
+                ),
         };
     }
 

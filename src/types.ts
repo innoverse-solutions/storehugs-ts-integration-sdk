@@ -14,6 +14,8 @@ import type {
     StorefrontCustomer,
     TaxonomyTermInput,
     UnitInput,
+    VariantOptionInput,
+    VariantValueInput,
 } from './schemas.ts';
 
 export type * from './schemas.ts';
@@ -41,6 +43,8 @@ export type AdminOfferInput = OfferInput;
 export type AdminQuotationInput = QuotationInput;
 export type InventoryItem = InventoryItemInput;
 export type AdminUnitInput = UnitInput & { name: string };
+export type AdminVariantOptionInput = VariantOptionInput & { name: string };
+export type AdminVariantValueInput = VariantValueInput & { name: string };
 export type AdminTaxonomyTermInput = TaxonomyTermInput & { title: string };
 export type AdminTaxonomyTermChanges = Partial<AdminTaxonomyTermInput> & {
     /** Removes the term's image. */
